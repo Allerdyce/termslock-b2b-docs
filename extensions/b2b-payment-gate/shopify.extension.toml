@@ -1,0 +1,21 @@
+api_version = "2026-10"
+
+[[extensions]]
+name = "b2b-payment-gate"
+handle = "b2b-payment-gate"
+type = "function"
+uid = "8f2a9c40-7d1e-4b3a-9c12-100000000002"
+description = "Net-30, Invoice & High-Value B2B Payment Method Customization Function (2026-10)"
+
+  [[extensions.targeting]]
+  target = "purchase.payment-customization.run"
+  input_query = "run.graphql"
+  export = "run"
+
+  [extensions.build]
+  command = "npm exec -- tsc --noEmit"
+  path = "dist/function.wasm"
+
+  [extensions.ui.paths]
+  create = "/rules/payment/new"
+  details = "/rules/payment/:id"

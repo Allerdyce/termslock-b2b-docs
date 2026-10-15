@@ -1,0 +1,95 @@
+# Shopify Functions Cart & Checkout Validation Schema (API Version 2026-10)
+
+scalar Decimal
+
+type Query {
+  cart: Cart!
+  cartValidation: CartValidation
+}
+
+type Cart {
+  poNumber: String
+  billingAddress: MailingAddress
+  cost: CartCost!
+  buyerIdentity: CartBuyerIdentity
+  lines: [CartLine!]!
+}
+
+type MailingAddress {
+  company: String
+  address1: String
+  city: String
+  provinceCode: String
+  countryCode: String
+  zip: String
+}
+
+type CartCost {
+  subtotalAmount: MoneyV2!
+}
+
+type MoneyV2 {
+  amount: Decimal!
+}
+
+type CartBuyerIdentity {
+  customer: Customer
+  purchasingCompany: PurchasingCompany
+}
+
+type Customer {
+  hasAnyTag(tags: [String!]!): Boolean!
+  numberOfOrders: Int!
+}
+
+type PurchasingCompany {
+  company: Company!
+  location: CompanyLocation
+}
+
+type Company {
+  id: ID!
+  name: String!
+}
+
+type CompanyLocation {
+  id: ID!
+}
+
+type CartLine {
+  quantity: Int!
+  merchandise: Merchandise!
+}
+
+union Merchandise = ProductVariant | CustomProduct
+
+type CustomProduct {
+  id: ID!
+}
+
+type ProductVariant {
+  id: ID!
+  sku: String
+  product: Product!
+}
+
+type Product {
+  hasAnyTag(tags: [String!]!): Boolean!
+}
+
+type CartValidation {
+  metafield(namespace: String!, key: String!): Metafield
+}
+
+type Metafield {
+  value: String!
+}
+
+type FunctionRunResult {
+  errors: [FunctionError!]!
+}
+
+type FunctionError {
+  localizedMessage: String!
+  target: String!
+}

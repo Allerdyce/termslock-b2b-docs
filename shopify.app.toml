@@ -1,0 +1,32 @@
+# TermsLock: B2B PO, Tax & Net-30 Checkout Rules
+# App ID: com.evidencepair.shopify.termslock
+# Target Shopify API Version: 2026-10
+
+name = "TermsLock: B2B PO, Tax & Net-30 Checkout Rules"
+client_id = "com.evidencepair.shopify.termslock"
+application_url = "https://termslock.evidencepair.com"
+embedded = true
+handle = "termslock-b2b-checkout-rules"
+
+[build]
+automatically_update_urls_on_dev = false
+dev_store_url = "termslock-b2b-dev.myshopify.com"
+
+[access_scopes]
+scopes = "read_customers,read_products,write_validations,write_payment_customizations"
+
+[auth]
+redirect_urls = [
+  "https://termslock.evidencepair.com/auth/callback",
+  "https://termslock.evidencepair.com/auth/shopify/callback"
+]
+
+[webhooks]
+api_version = "2026-10"
+
+  [[webhooks.subscriptions]]
+  compliance_topics = ["customers/data_request", "customers/redact", "shop/redact"]
+  uri = "/webhooks/gdpr"
+
+[pos]
+embedded = false

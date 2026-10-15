@@ -1,0 +1,77 @@
+# Shopify Functions Payment Customization Schema (API Version 2026-10)
+
+scalar Decimal
+
+type Query {
+  cart: Cart!
+  paymentMethods: [PaymentMethod!]!
+  paymentCustomization: PaymentCustomization
+}
+
+type Cart {
+  poNumber: String
+  cost: CartCost!
+  buyerIdentity: CartBuyerIdentity
+}
+
+type CartCost {
+  totalAmount: MoneyV2!
+}
+
+type MoneyV2 {
+  amount: Decimal!
+}
+
+type CartBuyerIdentity {
+  customer: Customer
+  purchasingCompany: PurchasingCompany
+}
+
+type Customer {
+  hasAnyTag(tags: [String!]!): Boolean!
+}
+
+type PurchasingCompany {
+  company: Company!
+}
+
+type Company {
+  id: ID!
+}
+
+type PaymentMethod {
+  id: ID!
+  name: String!
+}
+
+type PaymentCustomization {
+  metafield(namespace: String!, key: String!): Metafield
+}
+
+type Metafield {
+  value: String!
+}
+
+type FunctionRunResult {
+  operations: [Operation!]!
+}
+
+type Operation {
+  hide: HideOperation
+  move: MoveOperation
+  rename: RenameOperation
+}
+
+type HideOperation {
+  paymentMethodId: ID!
+}
+
+type MoveOperation {
+  paymentMethodId: ID!
+  index: Int!
+}
+
+type RenameOperation {
+  paymentMethodId: ID!
+  name: String!
+}

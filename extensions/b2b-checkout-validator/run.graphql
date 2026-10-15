@@ -1,0 +1,50 @@
+query RunInput {
+  cart {
+    poNumber
+    billingAddress {
+      company
+      address1
+      city
+      provinceCode
+      countryCode
+      zip
+    }
+    cost {
+      subtotalAmount {
+        amount
+      }
+    }
+    buyerIdentity {
+      customer {
+        hasAnyTag(tags: ["B2B", "Net-30", "Wholesale", "Approved-Wholesale", "Tax-Exempt"])
+        numberOfOrders
+      }
+      purchasingCompany {
+        company {
+          id
+          name
+        }
+        location {
+          id
+        }
+      }
+    }
+    lines {
+      quantity
+      merchandise {
+        ... on ProductVariant {
+          id
+          sku
+          product {
+            hasAnyTag(tags: ["Freight", "Pallet", "Wholesale-Case-6", "Wholesale-Case-12", "Hazmat-Class-3", "Hazmat-Oxidizer", "Lithium-Bulk"])
+          }
+        }
+      }
+    }
+  }
+  cartValidation {
+    metafield(namespace: "$app:termslock", key: "rules_config") {
+      value
+    }
+  }
+}

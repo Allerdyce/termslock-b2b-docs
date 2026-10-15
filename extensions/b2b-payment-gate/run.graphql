@@ -1,0 +1,29 @@
+query RunInput {
+  cart {
+    poNumber
+    cost {
+      totalAmount {
+        amount
+      }
+    }
+    buyerIdentity {
+      customer {
+        hasAnyTag(tags: ["Net-30", "Approved-Wholesale", "B2B", "Wire-Only"])
+      }
+      purchasingCompany {
+        company {
+          id
+        }
+      }
+    }
+  }
+  paymentMethods {
+    id
+    name
+  }
+  paymentCustomization {
+    metafield(namespace: "$app:termslock", key: "payment_rules") {
+      value
+    }
+  }
+}
