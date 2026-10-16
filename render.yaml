@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: termslock-shopify
+    env: node
+    plan: starter
+    region: oregon
+    buildCommand: npm ci
+    startCommand: node src/server.ts
+    healthCheckPath: /
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3456
+      - key: SHOPIFY_API_KEY
+        sync: false
+      - key: SHOPIFY_API_SECRET
+        sync: false
+      - key: SCOPES
+        value: write_cart_validations,write_payment_customizations

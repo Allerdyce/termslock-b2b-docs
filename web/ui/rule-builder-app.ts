@@ -280,8 +280,50 @@ export function renderEmbeddedRuleBuilderHtml(
       padding: 22px 24px;
       margin-bottom: 20px;
     }
+    .tl-summary-card {
+      margin-bottom: 20px;
+    }
+    .tl-summary-bullets {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 16px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .tl-summary-bullet {
+      font-size: 13px;
+      color: #374151;
+      line-height: 1.4;
+      font-weight: 500;
+    }
+    .tl-btn--full {
+      width: 100%;
+    }
     .tl-card--preview {
       margin-bottom: 0;
+    }
+    .tl-test-customer-drawer {
+      background: #F9FAFB;
+      border: 1px solid #E5E7EB;
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 16px;
+    }
+    .tl-test-customer-summary {
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      list-style: none;
+      font-size: 13px;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 8px;
+      user-select: none;
+    }
+    .tl-test-customer-summary::-webkit-details-marker {
+      display: none;
     }
     .tl-card-header {
       display: flex;
@@ -603,6 +645,7 @@ export function renderEmbeddedRuleBuilderHtml(
       font-weight: 500;
       color: #4B5563;
       cursor: pointer;
+      white-space: nowrap !important;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -1107,10 +1150,70 @@ export function renderEmbeddedRuleBuilderHtml(
           const regex = btn.getAttribute('data-regex');
           if (regex) {
             const input = document.getElementById('po-regex-input');
-            if (input) input.value = regex;
+            if (input) {
+              input.value = regex;
+              updateActiveRuleSummary();
+            }
           }
         });
       });
+
+      // Dynamic Active Rule Summary Bullets real-time sync
+      function updateActiveRuleSummary() {
+        const poRegexInput = document.getElementById('po-regex-input');
+        const poThresholdInput = document.getElementById('po-threshold-input');
+        const moqInput = document.getElementById('moq-subtotal-input');
+        const qtyInput = document.getElementById('sim-sku-qty-input');
+        const poboxToggle = document.getElementById('toggle-pobox-gate');
+        const tagInput = document.getElementById('net30-tags-input');
+
+        const poRegex = poRegexInput ? poRegexInput.value.trim() : '^PO-[0-9]{6}$';
+        const poThreshold = poThresholdInput ? poThresholdInput.value.trim() : '1000';
+        const moqSubtotal = moqInput ? moqInput.value.trim() : '500';
+        const caseQty = qtyInput ? qtyInput.value.trim() : '12';
+        const isPoBoxBlocked = poboxToggle ? poboxToggle.checked : true;
+        const tags = tagInput ? tagInput.value.trim() : 'Net-30';
+
+        const bPo = document.getElementById('summary-bullet-po');
+        if (bPo) bPo.textContent = '• PO format ' + poRegex + ' required ≥ $' + poThreshold;
+
+        const bMoq = document.getElementById('summary-bullet-moq');
+        if (bMoq) bMoq.textContent = '• $' + moqSubtotal + ' MOQ & ' + caseQty + '-unit case packs';
+
+        const bFreight = document.getElementById('summary-bullet-freight');
+        if (bFreight) bFreight.textContent = isPoBoxBlocked ? '• Freight P.O. Box addresses blocked' : '• Freight P.O. Box addresses allowed';
+
+        const bNet30 = document.getElementById('summary-bullet-net30');
+        if (bNet30) bNet30.textContent = '• Net-30 gated by tag (' + tags + ') + valid PO';
+      }
+
+      ['po-regex-input', 'po-threshold-input', 'moq-subtotal-input', 'sim-sku-qty-input', 'net30-tags-input'].forEach(function (id) {
+        const el = document.getElementById(id);
+        if (el) {
+          el.addEventListener('input', updateActiveRuleSummary);
+          el.addEventListener('change', updateActiveRuleSummary);
+        }
+      });
+
+      ['toggle-po-gate', 'toggle-pobox-gate', 'toggle-moq-gate', 'toggle-hazmat-gate', 'toggle-net30-po', 'toggle-cod-gate'].forEach(function (id) {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('change', updateActiveRuleSummary);
+      });
+
+      // Launch Live Checkout Simulator → button click handler
+      const launchSimBtn = document.getElementById('launch-simulator-btn');
+      if (launchSimBtn) {
+        launchSimBtn.addEventListener('click', function () {
+          const drawer = document.getElementById('test-buyer-drawer');
+          if (drawer) {
+            drawer.open = true;
+            drawer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          }
+          const poIn = document.getElementById('sim-po-input');
+          if (poIn) poIn.focus();
+          handleSimulate();
+        });
+      }
 
       // 1-Click Scenario Switchers
       if (scenarioPassBtn) {

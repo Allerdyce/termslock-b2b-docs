@@ -21,6 +21,18 @@ import {
   handleGdprWebhook,
   type GdprTopic
 } from "../web/webhooks/gdpr-handlers.ts";
+import {
+  exchangeSessionTokenForAccessToken,
+  createLiveShopifyAdminGraphQLClient
+} from "../web/admin/shopify-oauth.ts";
+import {
+  syncRulesToShopifyAdmin,
+  type AdminGraphQLClient
+} from "../web/admin/graphql-mutations.ts";
+import {
+  createOrBypassAppSubscription,
+  type BillingPlanTier
+} from "../web/billing/shopify-billing.ts";
 
 export const DEFAULT_PORT = 3456;
 export const DEFAULT_WEBHOOK_SECRET =
@@ -200,12 +212,60 @@ export function createTermsLockServer(
           state.validationRules = nextValidation;
           state.paymentRules = nextPayment;
 
+          // Check for live Shopify Admin GraphQL sync (Bearer <id_token> + shop domain)
+          const authHeader = req.headers["authorization"] ?? "";
+          const shop = (
+            (req.headers["x-shopify-shop-domain"] as string) ||
+            url.searchParams.get("shop") ||
+            (parsed.shop as string) ||
+            ""
+          ).toLowerCase().trim();
+
+          const idToken = authHeader.startsWith("Bearer ")
+            ? authHeader.slice(7).trim()
+            : "";
+
+          let liveSync: { synced: boolean; shop?: string; updatedCount?: number } = {
+            synced: false
+          };
+
+          if (shop && idToken && process.env.SHOPIFY_API_SECRET) {
+            try {
+              const tokenResult = await exchangeSessionTokenForAccessToken({
+                shop,
+                idToken
+              });
+              const client = createLiveShopifyAdminGraphQLClient(
+                shop,
+                tokenResult.accessToken
+              );
+              const syncRes = await syncRulesToShopifyAdmin(client, {
+                cartValidationOwnerId:
+                  (parsed.cartValidationOwnerId as string) ||
+                  "gid://shopify/CartValidation/1",
+                paymentCustomizationOwnerId:
+                  (parsed.paymentCustomizationOwnerId as string) ||
+                  "gid://shopify/PaymentCustomization/1",
+                validationRules: nextValidation,
+                paymentRules: nextPayment
+              });
+              liveSync = {
+                synced: true,
+                shop,
+                updatedCount: syncRes.updatedCount
+              };
+            } catch (syncErr) {
+              console.warn("[TermsLock Live Sync Warning]:", syncErr);
+            }
+          }
+
           sendJson(res, 200, {
             saved: true,
             validationRules: state.validationRules,
             paymentRules: state.paymentRules,
             validationMetafield,
-            paymentMetafield
+            paymentMetafield,
+            liveSync
           });
         } catch (err) {
           if (
@@ -240,7 +300,84 @@ export function createTermsLockServer(
         return;
       }
 
-      // 5. POST /api/webhooks/gdpr (or /webhooks/gdpr) -> Verifies X-Shopify-Hmac-Sha256
+      // 5. POST /api/billing/subscribe -> App subscription creation & bypass for testing
+      if (method === "POST" && pathname === "/api/billing/subscribe") {
+        const rawBody = await readRequestBody(req);
+        const parsed = JSON.parse(rawBody || "{}") as {
+          tier?: BillingPlanTier;
+          returnUrl?: string;
+          shop?: string;
+          isTestCharge?: boolean;
+        };
+
+        const tier: BillingPlanTier = parsed.tier ?? "PLUS_ENTERPRISE";
+        const returnUrl = parsed.returnUrl || "/?billing=success";
+        const isTestCharge = parsed.isTestCharge ?? true;
+
+        const authHeader = req.headers["authorization"] ?? "";
+        const shop = (
+          (req.headers["x-shopify-shop-domain"] as string) ||
+          url.searchParams.get("shop") ||
+          parsed.shop ||
+          ""
+        ).toLowerCase().trim();
+        const idToken = authHeader.startsWith("Bearer ")
+          ? authHeader.slice(7).trim()
+          : "";
+
+        let client: AdminGraphQLClient = {
+          request: async <TData = unknown>() => ({
+            data: {
+              appSubscriptionCreate: {
+                confirmationUrl: returnUrl,
+                appSubscription: {
+                  id: "gid://shopify/AppSubscription/mock-2026-10",
+                  name: "Shopify Plus & Enterprise Wholesale Plan",
+                  status: "PENDING",
+                  trialDays: 14
+                },
+                userErrors: []
+              }
+            } as unknown as TData
+          })
+        };
+
+        if (shop && idToken && process.env.SHOPIFY_API_SECRET) {
+          try {
+            const tokenResult = await exchangeSessionTokenForAccessToken({
+              shop,
+              idToken
+            });
+            client = createLiveShopifyAdminGraphQLClient(
+              shop,
+              tokenResult.accessToken
+            );
+          } catch (tokenErr) {
+            console.warn("[TermsLock Billing Token Exchange]:", tokenErr);
+          }
+        }
+
+        const subResult = await createOrBypassAppSubscription(client, {
+          tier,
+          returnUrl,
+          isTestCharge,
+          env: process.env
+        });
+
+        sendJson(res, 200, {
+          success: true,
+          confirmationUrl: subResult.confirmationUrl,
+          status: subResult.status,
+          tier: subResult.tier,
+          planName: subResult.planName,
+          amountUsd: subResult.amountUsd,
+          subscriptionId: subResult.subscriptionId,
+          bypassed: subResult.bypassed
+        });
+        return;
+      }
+
+      // 6. POST /api/webhooks/gdpr (or /webhooks/gdpr) -> Verifies X-Shopify-Hmac-Sha256
       if (
         method === "POST" &&
         (pathname === "/api/webhooks/gdpr" || pathname === "/webhooks/gdpr")

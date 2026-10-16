@@ -592,14 +592,59 @@ export function RuleBuilderPage({
       ),
 
       // =======================================================================
-      // RIGHT COLUMN: CHECKOUT PREVIEW CARD
+      // RIGHT COLUMN: ACTIVE RULE SUMMARY + CHECKOUT PREVIEW CARDS
       // =======================================================================
       e(
         "div",
         { className: "tl-right-col" },
+
+        // CARD A: ACTIVE RULE SUMMARY
         e(
           "section",
-          { className: "tl-card tl-card--preview" },
+          { className: "tl-card tl-summary-card", id: "active-rule-summary-card" },
+          e(
+            "div",
+            { className: "tl-card-header" },
+            e(
+              "div",
+              { className: "tl-card-header-left" },
+              e("div", { className: "tl-card-icon-wrap" }, icons.docSmall),
+              e(
+                "div",
+                null,
+                e("h2", { className: "tl-card-title" }, "Active Rule Summary"),
+                e("p", { className: "tl-card-desc" }, "Target: Shopify Functions 2026-10")
+              )
+            ),
+            e("span", { className: "tl-badge-active" }, "Active • 4 rules enabled")
+          ),
+          e(
+            "div",
+            { className: "tl-card-body" },
+            e(
+              "ul",
+              { className: "tl-summary-bullets" },
+              e("li", { id: "summary-bullet-po", className: "tl-summary-bullet" }, `• PO format ${validationRules.poRule.regexPattern} required ≥ $${validationRules.poRule.subtotalThreshold}`),
+              e("li", { id: "summary-bullet-moq", className: "tl-summary-bullet" }, `• $${validationRules.moqRule.minimumSubtotal} MOQ & 12-unit case packs`),
+              e("li", { id: "summary-bullet-freight", className: "tl-summary-bullet" }, "• Freight P.O. Box addresses blocked"),
+              e("li", { id: "summary-bullet-net30", className: "tl-summary-bullet" }, "• Net-30 gated by tag + valid PO")
+            ),
+            e(
+              "button",
+              {
+                type: "button",
+                id: "launch-simulator-btn",
+                className: "tl-btn tl-btn-primary tl-btn--full"
+              },
+              "Launch Live Checkout Simulator →"
+            )
+          )
+        ),
+
+        // CARD B: STOREFRONT CHECKOUT PREVIEW
+        e(
+          "section",
+          { className: "tl-card tl-card--preview", id: "card-checkout-preview" },
 
           // CARD HEADER
           e(
@@ -661,18 +706,18 @@ export function RuleBuilderPage({
               )
             ),
 
-            // TEST CUSTOMER PANEL
+            // EXPANDABLE TEST BUYER INPUTS DRAWER
             e(
-              "div",
-              { className: "tl-test-customer-panel" },
+              "details",
+              { id: "test-buyer-drawer", className: "tl-test-customer-drawer", open: true },
               e(
-                "div",
-                { className: "tl-test-customer-header" },
+                "summary",
+                { className: "tl-test-customer-summary" },
                 e(
                   "div",
                   { className: "tl-test-customer-title" },
                   icons.user,
-                  e("span", null, "Test customer")
+                  e("span", null, "⚙ Customize test buyer inputs")
                 ),
                 e("button", { type: "button", className: "tl-edit-btn" }, "✎ Edit")
               ),
