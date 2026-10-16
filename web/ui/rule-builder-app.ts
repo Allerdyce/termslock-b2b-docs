@@ -26,6 +26,7 @@ export interface EmbeddedAdminViewModel {
   paymentRules: TermsLockPaymentRulesConfig;
   simulatorScenario: DryRunSimulatorScenario;
   isEmbedded?: boolean;
+  apiKey?: string;
 }
 
 export const DEFAULT_SIMULATOR_SCENARIO: DryRunSimulatorScenario = {
@@ -86,7 +87,7 @@ export function renderEmbeddedRuleBuilderHtml(
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="shopify-api-key" content="${process.env.SHOPIFY_API_KEY || "SHOPIFY_API_KEY_PLACEHOLDER"}" />
+  <meta name="shopify-api-key" content="${model?.apiKey || process.env.SHOPIFY_API_KEY || "SHOPIFY_API_KEY_PLACEHOLDER"}" />
   <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
   <meta name="termslock-validator-handle" content="termslock-checkout-validator" />
   <meta name="termslock-payment-handle" content="termslock-payment-gate" />

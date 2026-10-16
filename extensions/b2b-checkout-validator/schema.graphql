@@ -1,9 +1,11 @@
+# api_version: 2026-10
 # Shopify Functions Cart & Checkout Validation Schema (API Version 2026-10)
 
 scalar Decimal
 
 type Query {
   cart: Cart!
+  validation: Validation
   cartValidation: CartValidation
 }
 
@@ -75,6 +77,11 @@ type ProductVariant {
 
 type Product {
   hasAnyTag(tags: [String!]!): Boolean!
+}
+
+type Validation {
+  id: String
+  metafield(namespace: String!, key: String!): Metafield
 }
 
 type CartValidation {

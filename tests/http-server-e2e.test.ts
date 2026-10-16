@@ -236,7 +236,7 @@ describe("Phase P4 (QA Gate 5): End-to-End HTTP Server + Wasm Neutral Bundle Int
       "utf8"
     );
     expect(appToml).toContain('api_version = "2026-10"');
-    expect(appToml).toContain("write_cart_validations");
+    expect(appToml).toContain("write_validations");
     expect(appToml).toContain("write_payment_customizations");
 
     const valExtToml = fs.readFileSync(
@@ -248,7 +248,7 @@ describe("Phase P4 (QA Gate 5): End-to-End HTTP Server + Wasm Neutral Bundle Int
     );
     expect(valExtToml).toContain('handle = "termslock-checkout-validator"');
     expect(valExtToml).toContain(
-      'target = "purchase.cart-checkout-validation.run"'
+      'target = "purchase.validation.run"'
     );
 
     const payExtToml = fs.readFileSync(

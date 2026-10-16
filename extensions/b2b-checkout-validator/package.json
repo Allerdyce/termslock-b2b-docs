@@ -1,0 +1,11 @@
+{
+  "name": "termslock-checkout-validator",
+  "version": "1.0.0",
+  "private": true,
+  "license": "UNLICENSED",
+  "type": "module",
+  "main": "src/run.ts",
+  "dependencies": {
+    "@shopify/shopify_function": "~2.0.0"
+  }
+}

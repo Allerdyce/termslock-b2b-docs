@@ -91,7 +91,9 @@ function isB2BCustomerOrCompany(input) {
   return hasPurchasingCompany || hasB2BTag;
 }
 function run(input) {
-  const config = parseRulesConfig(input.cartValidation?.metafield?.value);
+  const config = parseRulesConfig(
+    input.validation?.metafield?.value ?? input.cartValidation?.metafield?.value
+  );
   const errors = [];
   const subtotal = Number.parseFloat(
     input.cart.cost?.subtotalAmount?.amount ?? "0"
@@ -302,9 +304,11 @@ function enforceOutputBudget(errors) {
   }
   return { errors: boundedErrors };
 }
+var run_default = run;
 export {
   DEFAULT_RULES_CONFIG,
   MAX_OUTPUT_BYTES,
+  run_default as default,
   parseRulesConfig,
   run
 };

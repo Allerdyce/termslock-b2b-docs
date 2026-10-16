@@ -42,7 +42,7 @@ query RunInput {
       }
     }
   }
-  cartValidation {
+  validation {
     metafield(namespace: "$app:termslock", key: "rules_config") {
       value
     }

@@ -124,7 +124,8 @@ export async function handleRequest(request: Request, env: Env): Promise<Respons
         activePlan: "PLUS_ENTERPRISE",
         validationRules: workerState.validationRules,
         paymentRules: workerState.paymentRules,
-        isEmbedded
+        isEmbedded,
+        apiKey: env.SHOPIFY_API_KEY
       });
       return new Response(method === "HEAD" ? null : html, {
         status: 200,

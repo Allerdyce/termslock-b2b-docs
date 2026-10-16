@@ -1,0 +1,33 @@
+# Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
+
+client_id = "e8ac31b94c825ffc72edc69866875aa9"
+name = "TermsLock: B2B PO & Net-30"
+handle = "termslock-b2b"
+application_url = "https://termslock-shopify.evidencepair.workers.dev"
+embedded = true
+
+[build]
+automatically_update_urls_on_dev = true
+
+[access_scopes]
+# Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
+scopes = "write_validations,write_payment_customizations,read_products"
+
+[auth]
+redirect_urls = [
+  "https://termslock-shopify.evidencepair.workers.dev/api/auth/callback"
+]
+
+[webhooks]
+api_version = "2026-10"
+
+  [[webhooks.subscriptions]]
+  uri = "/api/webhooks/gdpr"
+  compliance_topics = [ "customers/data_request", "customers/redact", "shop/redact" ]
+
+  [[webhooks.subscriptions]]
+  uri = "/api/webhooks/uninstalled"
+  topics = [ "app/uninstalled" ]
+
+[pos]
+embedded = false

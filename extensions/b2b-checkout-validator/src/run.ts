@@ -118,7 +118,9 @@ function isB2BCustomerOrCompany(input: RunInput): boolean {
  * Zero network calls. Output strictly capped below 20 KB.
  */
 export function run(input: RunInput): FunctionRunResult {
-  const config = parseRulesConfig(input.cartValidation?.metafield?.value);
+  const config = parseRulesConfig(
+    input.validation?.metafield?.value ?? input.cartValidation?.metafield?.value
+  );
   const errors: FunctionError[] = [];
 
   const subtotal = Number.parseFloat(
@@ -422,4 +424,7 @@ function enforceOutputBudget(errors: FunctionError[]): FunctionRunResult {
   }
   return { errors: boundedErrors };
 }
+
+export default run;
+
 

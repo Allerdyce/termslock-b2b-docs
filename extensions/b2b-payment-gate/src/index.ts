@@ -4,4 +4,6 @@ export {
   parsePaymentRulesConfig,
   MAX_PAYMENT_OUTPUT_BYTES
 } from "./run.ts";
+export { default } from "./run.ts";
 export type * from "./types.ts";
+

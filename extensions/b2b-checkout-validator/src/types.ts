@@ -80,6 +80,11 @@ export interface RunInput {
     } | null;
     lines: CartLineInput[];
   };
+  validation?: {
+    metafield?: {
+      value: string;
+    } | null;
+  } | null;
   cartValidation?: {
     metafield?: {
       value: string;

@@ -10,6 +10,7 @@
     "build": "npm run build:wasm && node scripts/build-static-assets.mjs",
     "build:wasm": "esbuild extensions/b2b-checkout-validator/src/run.ts --bundle --platform=neutral --format=esm --outfile=dist/validator.bundle.mjs && esbuild extensions/b2b-payment-gate/src/run.ts --bundle --platform=neutral --format=esm --outfile=dist/payment-gate.bundle.mjs",
     "deploy:cf": "npm run build && wrangler deploy",
+    "deploy:shopify": "shopify app deploy --allow-updates --no-input",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -18,6 +19,7 @@
   "dependencies": {
     "@shopify/polaris": "^13.9.5",
     "@shopify/polaris-icons": "^9.3.1",
+    "@shopify/shopify_function": "~2.0.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },

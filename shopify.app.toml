@@ -1,38 +1,34 @@
-# TermsLock: B2B PO, Tax & Net-30 Checkout Rules
-# App ID: com.evidencepair.shopify.termslock
-# Target Shopify API Version: 2026-10
+# Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
-name = "TermsLock: B2B PO, Tax & Net-30 Checkout Rules"
-client_id = "com.evidencepair.shopify.termslock"
-application_url = "https://termslock.evidencepair.com"
+client_id = "e8ac31b94c825ffc72edc69866875aa9"
+name = "TermsLock: B2B PO & Net-30"
+handle = "termslock-b2b"
+application_url = "https://termslock-shopify.evidencepair.workers.dev"
 embedded = true
-handle = "termslock-b2b-checkout-rules"
-api_version = "2026-10"
 
 [build]
-automatically_update_urls_on_dev = false
-dev_store_url = "termslock-b2b-dev.myshopify.com"
+include_config_on_deploy = true
+automatically_update_urls_on_dev = true
 
 [access_scopes]
-scopes = "write_cart_validations,write_payment_customizations,read_customers,read_products"
+# Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
+scopes = "write_validations,write_payment_customizations,read_products"
 
 [auth]
 redirect_urls = [
-  "https://termslock.evidencepair.com/api/auth/callback",
-  "https://termslock.evidencepair.com/auth/callback",
-  "https://termslock.evidencepair.com/auth/shopify/callback"
+  "https://termslock-shopify.evidencepair.workers.dev/api/auth/callback"
 ]
 
 [webhooks]
 api_version = "2026-10"
 
   [[webhooks.subscriptions]]
-  compliance_topics = ["customers/data_request", "customers/redact", "shop/redact"]
   uri = "/api/webhooks/gdpr"
+  compliance_topics = [ "customers/data_request", "customers/redact", "shop/redact" ]
 
   [[webhooks.subscriptions]]
-  topics = ["app/uninstalled"]
   uri = "/api/webhooks/uninstalled"
+  topics = [ "app/uninstalled" ]
 
 [pos]
 embedded = false

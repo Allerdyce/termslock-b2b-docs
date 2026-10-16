@@ -162,9 +162,11 @@ function enforcePaymentOutputBudget(operations) {
   }
   return { operations: bounded };
 }
+var run_default = run;
 export {
   DEFAULT_PAYMENT_RULES_CONFIG,
   MAX_PAYMENT_OUTPUT_BYTES,
+  run_default as default,
   parsePaymentRulesConfig,
   run
 };

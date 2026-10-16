@@ -6,8 +6,9 @@ compatibility_flags = ["nodejs_compat"]
 
 # Public build-time environment variables
 [vars]
-SHOPIFY_API_KEY = "termslock_mock_client_id_2026"
-SCOPES = "read_orders,write_checkouts,read_customer_payment_methods"
+SHOPIFY_API_KEY = "e8ac31b94c825ffc72edc69866875aa9"
+SCOPES = "write_validations,write_payment_customizations,read_products"
+HOST = "https://termslock-shopify.evidencepair.workers.dev"
 DEFAULT_WEBHOOK_SECRET = "shpss_termslock_2026_10_secret"
 
 # To set production secrets:
