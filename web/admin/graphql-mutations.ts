@@ -1,20 +1,29 @@
-import type { TermsLockRulesConfig } from "../../extensions/b2b-checkout-validator/src/types.js";
-import type { TermsLockPaymentRulesConfig } from "../../extensions/b2b-payment-gate/src/types.js";
+import type { TermsLockRulesConfig } from "../../extensions/b2b-checkout-validator/src/types.ts";
+import type { TermsLockPaymentRulesConfig } from "../../extensions/b2b-payment-gate/src/types.ts";
 import {
   APP_METAFIELD_NAMESPACE,
   compilePaymentRulesMetafield,
   compileValidationRulesMetafield,
   PAYMENT_METAFIELD_KEY,
   VALIDATION_METAFIELD_KEY
-} from "../compiler/metafield-compiler.js";
+} from "../compiler/metafield-compiler.ts";
 
 export const SHOPIFY_ADMIN_API_VERSION = "2026-10";
+export const CHECKOUT_VALIDATOR_FUNCTION_HANDLE = "termslock-checkout-validator";
+export const PAYMENT_GATE_FUNCTION_HANDLE = "termslock-payment-gate";
 
 export const CART_VALIDATION_CREATE_MUTATION = `#graphql
-mutation CartValidationCreate($functionId: String!, $title: String!, $blockOnFailure: Boolean!, $metafields: [MetafieldInput!]) {
+mutation CartValidationCreate(
+  $functionId: String
+  $functionHandle: String
+  $title: String!
+  $blockOnFailure: Boolean!
+  $metafields: [MetafieldInput!]
+) {
   cartValidationCreate(
     cartValidation: {
       functionId: $functionId
+      functionHandle: $functionHandle
       title: $title
       blockOnFailure: $blockOnFailure
       enable: true
@@ -36,10 +45,17 @@ mutation CartValidationCreate($functionId: String!, $title: String!, $blockOnFai
 `;
 
 export const PAYMENT_CUSTOMIZATION_CREATE_MUTATION = `#graphql
-mutation PaymentCustomizationCreate($functionId: String!, $title: String!, $enabled: Boolean!, $metafields: [MetafieldInput!]) {
+mutation PaymentCustomizationCreate(
+  $functionId: String
+  $functionHandle: String
+  $title: String!
+  $enabled: Boolean!
+  $metafields: [MetafieldInput!]
+) {
   paymentCustomizationCreate(
     paymentCustomization: {
       functionId: $functionId
+      functionHandle: $functionHandle
       title: $title
       enabled: $enabled
       metafields: $metafields
@@ -134,25 +150,35 @@ export function buildMetafieldsSetVariables(params: {
 }
 
 /**
- * Registers both TermsLock Functions (`b2b-checkout-validator` and `b2b-payment-gate`)
- * via `cartValidationCreate` and `paymentCustomizationCreate` and initializes `$app:termslock` metafields.
+ * Registers both TermsLock Functions (`termslock-checkout-validator` and `termslock-payment-gate`)
+ * via `cartValidationCreate` and `paymentCustomizationCreate` supporting both `functionHandle`
+ * and `functionId` (2026-04 / 2026-10) and initializes `$app:termslock` metafields.
  */
 export async function registerTermsLockFunctions(
   client: AdminGraphQLClient,
   params: {
-    validationFunctionId: string;
-    paymentFunctionId: string;
+    validationFunctionId?: string;
+    validationFunctionHandle?: string;
+    paymentFunctionId?: string;
+    paymentFunctionHandle?: string;
     validationRules: TermsLockRulesConfig;
     paymentRules: TermsLockPaymentRulesConfig;
   }
 ): Promise<{
   cartValidationId: string;
   paymentCustomizationId: string;
+  validationFunctionHandle: string;
+  paymentFunctionHandle: string;
 }> {
   const compiledValidation = compileValidationRulesMetafield(
     params.validationRules
   );
   const compiledPayment = compilePaymentRulesMetafield(params.paymentRules);
+
+  const validationFunctionHandle =
+    params.validationFunctionHandle ?? CHECKOUT_VALIDATOR_FUNCTION_HANDLE;
+  const paymentFunctionHandle =
+    params.paymentFunctionHandle ?? PAYMENT_GATE_FUNCTION_HANDLE;
 
   const validationResp = await client.request<{
     cartValidationCreate: {
@@ -161,6 +187,7 @@ export async function registerTermsLockFunctions(
     };
   }>(CART_VALIDATION_CREATE_MUTATION, {
     functionId: params.validationFunctionId,
+    functionHandle: validationFunctionHandle,
     title: "TermsLock: B2B PO, Billing Address & MOQ Validator",
     blockOnFailure: true,
     metafields: [
@@ -187,6 +214,7 @@ export async function registerTermsLockFunctions(
     };
   }>(PAYMENT_CUSTOMIZATION_CREATE_MUTATION, {
     functionId: params.paymentFunctionId,
+    functionHandle: paymentFunctionHandle,
     title: "TermsLock: Net-30 & Wholesale Payment Method Gate",
     enabled: true,
     metafields: [
@@ -212,7 +240,9 @@ export async function registerTermsLockFunctions(
       validationResp.data?.cartValidationCreate?.cartValidation?.id ?? "",
     paymentCustomizationId:
       paymentResp.data?.paymentCustomizationCreate?.paymentCustomization?.id ??
-      ""
+      "",
+    validationFunctionHandle,
+    paymentFunctionHandle
   };
 }
 

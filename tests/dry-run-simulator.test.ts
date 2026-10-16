@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { executeDryRunSimulation } from "../web/simulator/dry-run-simulator.js";
-import { renderEmbeddedRuleBuilderHtml } from "../web/ui/rule-builder-app.js";
+import { executeDryRunSimulation } from "../web/simulator/dry-run-simulator.ts";
+import { renderEmbeddedRuleBuilderHtml } from "../web/ui/rule-builder-app.ts";
 
 describe("Milestone 4: Interactive Dry-Run Checkout Simulator & Embedded Admin UI", () => {
   it("28. simulates a compliant Net-30 B2B checkout with PO-10492 and unlocks Net-30 Corporate Invoice", () => {

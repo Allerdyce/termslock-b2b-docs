@@ -5,6 +5,9 @@
   "description": "TermsLock: B2B PO, Tax & Net-30 Checkout Rules for Shopify Functions (API 2026-10)",
   "type": "module",
   "scripts": {
+    "start": "node src/server.ts",
+    "dev:server": "node src/server.ts",
+    "build:wasm": "esbuild extensions/b2b-checkout-validator/src/run.ts --bundle --platform=neutral --format=esm --outfile=dist/validator.bundle.mjs && esbuild extensions/b2b-payment-gate/src/run.ts --bundle --platform=neutral --format=esm --outfile=dist/payment-gate.bundle.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",

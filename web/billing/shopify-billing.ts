@@ -1,4 +1,4 @@
-import type { AdminGraphQLClient } from "../admin/graphql-mutations.js";
+import type { AdminGraphQLClient } from "../admin/graphql-mutations.ts";
 
 export type BillingPlanTier = "B2B_STANDARD" | "PLUS_ENTERPRISE";
 

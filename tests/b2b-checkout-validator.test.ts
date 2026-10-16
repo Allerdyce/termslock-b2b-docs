@@ -3,11 +3,11 @@ import {
   DEFAULT_RULES_CONFIG,
   MAX_OUTPUT_BYTES,
   run
-} from "../extensions/b2b-checkout-validator/src/index.js";
+} from "../extensions/b2b-checkout-validator/src/index.ts";
 import type {
   RunInput,
   TermsLockRulesConfig
-} from "../extensions/b2b-checkout-validator/src/types.js";
+} from "../extensions/b2b-checkout-validator/src/types.ts";
 
 function buildBaseB2BInput(overrides: Partial<RunInput["cart"]> = {}): RunInput {
   return {

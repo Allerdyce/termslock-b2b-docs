@@ -1,26 +1,26 @@
 import {
   DEFAULT_RULES_CONFIG,
   run as runValidation
-} from "../../extensions/b2b-checkout-validator/src/run.js";
+} from "../../extensions/b2b-checkout-validator/src/run.ts";
 import type {
   FunctionError,
   RunInput,
   TermsLockRulesConfig
-} from "../../extensions/b2b-checkout-validator/src/types.js";
+} from "../../extensions/b2b-checkout-validator/src/types.ts";
 import {
   DEFAULT_PAYMENT_RULES_CONFIG,
   run as runPaymentGate
-} from "../../extensions/b2b-payment-gate/src/run.js";
+} from "../../extensions/b2b-payment-gate/src/run.ts";
 import type {
   PaymentMethodInput,
   PaymentOperation,
   PaymentRunInput,
   TermsLockPaymentRulesConfig
-} from "../../extensions/b2b-payment-gate/src/types.js";
+} from "../../extensions/b2b-payment-gate/src/types.ts";
 import {
   compilePaymentRulesMetafield,
   compileValidationRulesMetafield
-} from "../compiler/metafield-compiler.js";
+} from "../compiler/metafield-compiler.ts";
 
 export interface DryRunSimulatorLineItem {
   sku: string;

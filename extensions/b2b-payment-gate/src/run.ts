@@ -4,7 +4,7 @@ import type {
   PaymentOperation,
   PaymentRunInput,
   TermsLockPaymentRulesConfig
-} from "./types.js";
+} from "./types.ts";
 
 export const MAX_PAYMENT_OUTPUT_BYTES = 20_480;
 
@@ -187,6 +187,24 @@ export function run(input: PaymentRunInput): PaymentFunctionRunResult {
   return enforcePaymentOutputBudget(operations);
 }
 
+function utf8ByteLength(str: string): number {
+  let bytes = 0;
+  for (let i = 0; i < str.length; i++) {
+    const code = str.charCodeAt(i);
+    if (code < 0x80) {
+      bytes += 1;
+    } else if (code < 0x800) {
+      bytes += 2;
+    } else if (code >= 0xd800 && code <= 0xdbff) {
+      bytes += 4;
+      i++;
+    } else {
+      bytes += 3;
+    }
+  }
+  return bytes;
+}
+
 function enforcePaymentOutputBudget(
   operations: PaymentOperation[]
 ): PaymentFunctionRunResult {
@@ -194,13 +212,11 @@ function enforcePaymentOutputBudget(
   for (const op of operations) {
     bounded.push(op);
     const serialized = JSON.stringify({ operations: bounded });
-    if (
-      Buffer.byteLength(serialized, "utf8") >=
-      MAX_PAYMENT_OUTPUT_BYTES - 512
-    ) {
+    if (utf8ByteLength(serialized) >= MAX_PAYMENT_OUTPUT_BYTES - 512) {
       bounded.pop();
       break;
     }
   }
   return { operations: bounded };
 }
+

@@ -1,5 +1,5 @@
-import type { TermsLockRulesConfig } from "../../extensions/b2b-checkout-validator/src/types.js";
-import type { TermsLockPaymentRulesConfig } from "../../extensions/b2b-payment-gate/src/types.js";
+import type { TermsLockRulesConfig } from "../../extensions/b2b-checkout-validator/src/types.ts";
+import type { TermsLockPaymentRulesConfig } from "../../extensions/b2b-payment-gate/src/types.ts";
 
 export const APP_METAFIELD_NAMESPACE = "$app:termslock";
 export const VALIDATION_METAFIELD_KEY = "rules_config";

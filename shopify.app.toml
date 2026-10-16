@@ -7,13 +7,14 @@ client_id = "com.evidencepair.shopify.termslock"
 application_url = "https://termslock.evidencepair.com"
 embedded = true
 handle = "termslock-b2b-checkout-rules"
+api_version = "2026-10"
 
 [build]
 automatically_update_urls_on_dev = false
 dev_store_url = "termslock-b2b-dev.myshopify.com"
 
 [access_scopes]
-scopes = "read_customers,read_products,write_validations,write_payment_customizations"
+scopes = "write_cart_validations,write_payment_customizations,read_customers,read_products"
 
 [auth]
 redirect_urls = [
@@ -26,7 +27,7 @@ api_version = "2026-10"
 
   [[webhooks.subscriptions]]
   compliance_topics = ["customers/data_request", "customers/redact", "shop/redact"]
-  uri = "/webhooks/gdpr"
+  uri = "/api/webhooks/gdpr"
 
 [pos]
 embedded = false

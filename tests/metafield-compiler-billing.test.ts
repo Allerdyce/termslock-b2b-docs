@@ -2,18 +2,18 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { DEFAULT_RULES_CONFIG } from "../extensions/b2b-checkout-validator/src/index.js";
-import { DEFAULT_PAYMENT_RULES_CONFIG } from "../extensions/b2b-payment-gate/src/index.js";
+import { DEFAULT_RULES_CONFIG } from "../extensions/b2b-checkout-validator/src/index.ts";
+import { DEFAULT_PAYMENT_RULES_CONFIG } from "../extensions/b2b-payment-gate/src/index.ts";
 import {
   registerTermsLockFunctions,
   syncRulesToShopifyAdmin,
   type AdminGraphQLClient
-} from "../web/admin/graphql-mutations.js";
+} from "../web/admin/graphql-mutations.ts";
 import {
   checkPlanFeatureEntitlement,
   createOrBypassAppSubscription,
   TERMSLOCK_BILLING_PLANS
-} from "../web/billing/shopify-billing.js";
+} from "../web/billing/shopify-billing.ts";
 import {
   APP_METAFIELD_NAMESPACE,
   compileValidationRulesMetafield,
@@ -21,8 +21,8 @@ import {
   InvalidRuleRegexError,
   MAX_METAFIELD_BYTES,
   MetafieldBudgetExceededError
-} from "../web/compiler/metafield-compiler.js";
-import { handleGdprWebhook } from "../web/webhooks/gdpr-handlers.js";
+} from "../web/compiler/metafield-compiler.ts";
+import { handleGdprWebhook } from "../web/webhooks/gdpr-handlers.ts";
 
 describe("Milestone 3: Metafield Compiler (<10 KB), GraphQL Complexity (<30 pts), Admin Sync & Billing API", () => {
   it("20. compiles validation rules to $app:termslock.rules_config well under the <10 KB budget", () => {

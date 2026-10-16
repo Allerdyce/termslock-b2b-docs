@@ -5,7 +5,7 @@ import type {
   ProductVariantMerchandise,
   RunInput,
   TermsLockRulesConfig
-} from "./types.js";
+} from "./types.ts";
 
 export const MAX_OUTPUT_BYTES = 20_480; // < 20 KB Shopify Function output ceiling
 
@@ -385,6 +385,24 @@ export function run(input: RunInput): FunctionRunResult {
   return enforceOutputBudget(errors);
 }
 
+function utf8ByteLength(str: string): number {
+  let bytes = 0;
+  for (let i = 0; i < str.length; i++) {
+    const code = str.charCodeAt(i);
+    if (code < 0x80) {
+      bytes += 1;
+    } else if (code < 0x800) {
+      bytes += 2;
+    } else if (code >= 0xd800 && code <= 0xdbff) {
+      bytes += 4;
+      i++;
+    } else {
+      bytes += 3;
+    }
+  }
+  return bytes;
+}
+
 function enforceOutputBudget(errors: FunctionError[]): FunctionRunResult {
   const boundedErrors: FunctionError[] = [];
   for (const err of errors) {
@@ -397,10 +415,11 @@ function enforceOutputBudget(errors: FunctionError[]): FunctionRunResult {
     };
     boundedErrors.push(sanitized);
     const serialized = JSON.stringify({ errors: boundedErrors });
-    if (Buffer.byteLength(serialized, "utf8") >= MAX_OUTPUT_BYTES - 512) {
+    if (utf8ByteLength(serialized) >= MAX_OUTPUT_BYTES - 512) {
       boundedErrors.pop();
       break;
     }
   }
   return { errors: boundedErrors };
 }
+

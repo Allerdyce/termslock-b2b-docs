@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   DEFAULT_PAYMENT_RULES_CONFIG,
   run
-} from "../extensions/b2b-payment-gate/src/index.js";
-import type { PaymentRunInput } from "../extensions/b2b-payment-gate/src/types.js";
+} from "../extensions/b2b-payment-gate/src/index.ts";
+import type { PaymentRunInput } from "../extensions/b2b-payment-gate/src/types.ts";
 
 const SAMPLE_METHODS = [
   { id: "pm-card", name: "Shopify Payments (Credit Card)" },
