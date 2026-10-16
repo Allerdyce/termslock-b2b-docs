@@ -247,6 +247,42 @@ export function createTermsLockServer(
         }
       }
 
+      // 1e. Static Store Assets: /app-icon.png and /screenshot-[1-3].png
+      if (
+        (method === "GET" || method === "HEAD") &&
+        (pathname === "/app-icon.png" ||
+          pathname === "/screenshot-1.png" ||
+          pathname === "/screenshot-2.png" ||
+          pathname === "/screenshot-3.png")
+      ) {
+        const filenameMap: Record<string, string> = {
+          "/app-icon.png": "app-icon-1200x1200.png",
+          "/screenshot-1.png": "01-b2b-po-number-checkout-validation.png",
+          "/screenshot-2.png": "02-net30-payment-method-customization.png",
+          "/screenshot-3.png": "03-wholesale-moq-dryrun-simulator.png"
+        };
+        const imgPath = path.resolve(process.cwd(), `docs/shopify-store/screenshots/${filenameMap[pathname]}`);
+        if (fs.existsSync(imgPath)) {
+          const stat = fs.statSync(imgPath);
+          res.writeHead(200, {
+            "Content-Type": "image/png",
+            "Content-Length": stat.size,
+            "Cache-Control": "public, max-age=86400",
+            "Access-Control-Allow-Origin": "*"
+          });
+          if (method === "HEAD") {
+            res.end();
+            return;
+          }
+          fs.createReadStream(imgPath).pipe(res);
+          return;
+        } else {
+          res.writeHead(404, { "Content-Type": "text/plain" });
+          res.end("Image not found");
+          return;
+        }
+      }
+
       // 2. GET /api/rules -> Returns active rules and compiled $app:termslock metafields
       if (method === "GET" && pathname === "/api/rules") {
         const validationMetafield = compileValidationRulesMetafield(
