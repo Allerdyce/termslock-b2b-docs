@@ -1,4 +1,6 @@
+import fs from "node:fs";
 import http from "node:http";
+import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { DEFAULT_RULES_CONFIG } from "../extensions/b2b-checkout-validator/src/run.ts";
 import type { TermsLockRulesConfig } from "../extensions/b2b-checkout-validator/src/types.ts";
@@ -23,6 +25,11 @@ import {
 export const DEFAULT_PORT = 3456;
 export const DEFAULT_WEBHOOK_SECRET =
   process.env.SHOPIFY_API_SECRET ?? "shpss_termslock_2026_10_secret";
+
+const POLARIS_CSS_PATH = path.resolve(
+  process.cwd(),
+  "node_modules/@shopify/polaris/build/esm/styles.css"
+);
 
 export interface TermsLockServerState {
   validationRules: TermsLockRulesConfig;
@@ -53,8 +60,8 @@ function sendJson(
 }
 
 /**
- * Creates a runnable Node.js HTTP server for TermsLock (Admin UI, Metafield Compiler API,
- * Live Dry-Run Simulator API, and Mandatory GDPR Webhook endpoint).
+ * Creates a runnable Node.js HTTP server for TermsLock (Admin UI, Official @shopify/polaris CSS,
+ * Metafield Compiler API, Live Dry-Run Simulator API, and Mandatory GDPR Webhook endpoint).
  */
 export function createTermsLockServer(
   initialState?: Partial<TermsLockServerState>
@@ -77,6 +84,20 @@ export function createTermsLockServer(
       const method = req.method ?? "GET";
       const url = new URL(req.url ?? "/", "http://localhost");
       const pathname = url.pathname;
+
+      // 0. GET /polaris.css -> Official @shopify/polaris stylesheet from node_modules
+      if (method === "GET" && pathname === "/polaris.css") {
+        const css = fs.existsSync(POLARIS_CSS_PATH)
+          ? fs.readFileSync(POLARIS_CSS_PATH, "utf8")
+          : "";
+        res.writeHead(200, {
+          "Content-Type": "text/css; charset=utf-8",
+          "Cache-Control": "public, max-age=3600",
+          "Content-Length": Buffer.byteLength(css, "utf8")
+        });
+        res.end(css);
+        return;
+      }
 
       // 1. GET / -> Full Interactive Admin Rule Builder & Dry-Run Simulator HTML
       if (method === "GET" && pathname === "/") {

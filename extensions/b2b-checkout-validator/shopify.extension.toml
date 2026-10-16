@@ -16,6 +16,11 @@ description = "B2B PO Number, Billing Address, Wholesale MOQ & Hazmat Checkout V
   command = "npx esbuild src/run.ts --bundle --platform=neutral --format=esm --outfile=../../dist/validator.bundle.mjs"
   path = "dist/function.wasm"
 
+  [extensions.ui]
+  handle = "termslock-checkout-validator-ui"
+  target = "admin.checkout-validation.render"
+  module = "./src/AdminUiExtension.ts"
+
   [extensions.ui.paths]
   create = "/rules/validation/new"
   details = "/rules/validation/:id"

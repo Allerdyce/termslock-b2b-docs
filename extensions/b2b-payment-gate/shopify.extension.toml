@@ -16,6 +16,11 @@ description = "Net-30, Invoice & High-Value B2B Payment Method Customization Fun
   command = "npx esbuild src/run.ts --bundle --platform=neutral --format=esm --outfile=../../dist/payment-gate.bundle.mjs"
   path = "dist/function.wasm"
 
+  [extensions.ui]
+  handle = "termslock-payment-gate-ui"
+  target = "admin.payment-customization.render"
+  module = "./src/AdminUiExtension.ts"
+
   [extensions.ui.paths]
   create = "/rules/payment/new"
   details = "/rules/payment/:id"

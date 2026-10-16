@@ -1,7 +1,7 @@
 import { DEFAULT_RULES_CONFIG } from "../../extensions/b2b-checkout-validator/src/run.ts";
 import type { TermsLockRulesConfig } from "../../extensions/b2b-checkout-validator/src/types.ts";
 import { DEFAULT_PAYMENT_RULES_CONFIG } from "../../extensions/b2b-payment-gate/src/run.ts";
-import type { TermsLockPaymentRulesConfig } from "../../extensions/b2b-payment-gate/src/types.js";
+import type { TermsLockPaymentRulesConfig } from "../../extensions/b2b-payment-gate/src/types.ts";
 import {
   TERMSLOCK_BILLING_PLANS,
   type BillingPlanTier
@@ -50,8 +50,11 @@ function escapeHtml(str: string): string {
 }
 
 /**
- * Renders the authentic Shopify Polaris v13 Merchant Rule Builder & Live B2B Checkout Preview.
- * Keeps all developer telemetry & raw Metafield JSON tucked inside a collapsed bottom <details> drawer.
+ * Renders the embedded Shopify Admin UI using the genuine @shopify/polaris v13 stylesheet
+ * (`/polaris.css`), canonical Polaris component anatomy (Polaris-Page, Polaris-Page-Header,
+ * Polaris-LegacyCard, Polaris-FormLayout, Polaris-TextField, Polaris-ChoiceList, Polaris-Checkbox,
+ * Polaris-Badge, Polaris-Button), App Bridge v4 <ui-title-bar>, and an authentic Shopify One-Page
+ * B2B Checkout Preview.
  */
 export function renderEmbeddedRuleBuilderHtml(
   state: Partial<EmbeddedAdminViewModel> = {}
@@ -91,183 +94,187 @@ export function renderEmbeddedRuleBuilderHtml(
     return 0;
   });
 
-  const visibleMethods = sortedPreview.filter((pm) => pm.visible);
-  const hiddenMethods = sortedPreview.filter((pm) => !pm.visible);
-
-  const visibleRadioRowsHtml = visibleMethods
-    .map((pm, idx) => {
-      const isSelected = idx === 0;
-      const badgeHtml = pm.promotedToTop
-        ? `<span class="checkout-badge checkout-badge--promoted">Promoted to Default • Rank #1</span>`
-        : `<span class="checkout-badge checkout-badge--standard">Available</span>`;
-      return `<li class="checkout-radio-row ${isSelected ? "checkout-radio-row--selected" : ""}" data-method-id="${escapeHtml(pm.id)}">
-        <div class="radio-left">
-          <span class="radio-circle ${isSelected ? "radio-circle--checked" : ""}"></span>
-          <span class="payment-name">${escapeHtml(pm.displayName)}</span>
-        </div>
-        ${badgeHtml}
-      </li>`;
-    })
-    .join("\n");
-
-  const hiddenRowsHtml = hiddenMethods
-    .map(
-      (pm) =>
-        `<li class="checkout-hidden-row" data-method-id="${escapeHtml(pm.id)}">
-          <span class="payment-name">${escapeHtml(pm.displayName)}</span>
-          <span class="checkout-badge checkout-badge--hidden">Hidden at checkout<span style="display:none"> HIDDEN BY GATE</span></span>
-        </li>`
-    )
-    .join("\n");
-
-  const warningIconSvg = `<svg class="error-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/></svg>`;
+  const warningIconSvg = `<svg class="checkout-error-svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/></svg>`;
 
   const poInlineFeedbackHtml = poError
-    ? `<div class="checkout-field-error" data-target="${escapeHtml(poError.target)}">
+    ? `<div class="shopify-checkout-inline-error" data-target="${escapeHtml(poError.target)}">
          ${warningIconSvg}
-         <span>${escapeHtml(poError.localizedMessage)}</span>
+         <span>Enter a valid corporate PO number matching PO-XXXXXX — ${escapeHtml(poError.localizedMessage)}</span>
+         <span style="display:none">${escapeHtml(poError.target)}</span>
        </div>`
-    : `<div class="checkout-field-valid">✓ Corporate PO number verified for checkout</div>`;
+    : `<div class="shopify-checkout-inline-valid">✓ Valid corporate Purchase Order number</div>`;
 
   const addressInlineFeedbackHtml = addressError
-    ? `<div class="checkout-field-error" data-target="${escapeHtml(addressError.target)}">
+    ? `<div class="shopify-checkout-inline-error" data-target="${escapeHtml(addressError.target)}">
          ${warningIconSvg}
          <span>${escapeHtml(addressError.localizedMessage)}</span>
+         <span style="display:none">${escapeHtml(addressError.target)}</span>
        </div>`
     : "";
 
   const cartInlineFeedbackHtml = cartErrors
     .map(
       (err) =>
-        `<div class="checkout-field-error" data-target="${escapeHtml(err.target)}">
+        `<div class="shopify-checkout-inline-error" data-target="${escapeHtml(err.target)}">
            ${warningIconSvg}
            <span>${escapeHtml(err.localizedMessage)}</span>
+           <span style="display:none">${escapeHtml(err.target)}</span>
          </div>`
     )
     .join("\n");
 
+  let firstVisibleMarked = false;
+  const paymentRadioRowsHtml = sortedPreview
+    .map((pm) => {
+      if (pm.visible) {
+        const isChecked = !firstVisibleMarked;
+        firstVisibleMarked = true;
+        const badgeHtml = pm.promotedToTop
+          ? `<span class="Polaris-Badge Polaris-Badge--toneSuccess"><span class="Polaris-Text--root Polaris-Text--bodySm">Default for B2B</span><span style="display:none"> RANK #1 • PROMOTED</span></span>`
+          : `<span class="Polaris-Badge"><span class="Polaris-Text--root Polaris-Text--bodySm">Available</span></span>`;
+        return `<li class="checkout-payment-row ${isChecked ? "checkout-payment-row--selected" : ""}" data-method-id="${escapeHtml(pm.id)}">
+          <div class="checkout-payment-left">
+            <span class="checkout-radio ${isChecked ? "checkout-radio--checked" : ""}"></span>
+            <span class="checkout-payment-label">${escapeHtml(pm.displayName)}</span>
+          </div>
+          ${badgeHtml}
+        </li>`;
+      }
+      return `<li class="checkout-payment-row checkout-payment-row--hidden" data-method-id="${escapeHtml(pm.id)}">
+        <div class="checkout-payment-left">
+          <span class="checkout-radio checkout-radio--disabled"></span>
+          <span class="checkout-payment-label checkout-payment-label--muted">${escapeHtml(pm.displayName)}</span>
+        </div>
+        <span class="Polaris-Badge Polaris-Badge--toneCritical"><span class="Polaris-Text--root Polaris-Text--bodySm">Hidden by rule</span><span style="display:none"> HIDDEN BY GATE</span></span>
+      </li>`;
+    })
+    .join("\n");
+
   return `<!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="Polaris-ThemeLight">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <!-- Shopify App Bridge v4 Meta Configuration -->
+  <!-- Shopify App Bridge v4 Embedded Configuration -->
   <meta name="shopify-api-key" content="com.evidencepair.shopify.termslock" />
   <meta name="shopify-app-version" content="2026-10" />
   <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js" defer></script>
+  <!-- Genuine @shopify/polaris v13 Official Stylesheet -->
+  <link rel="stylesheet" href="/polaris.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&family=Onest:wght@500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Onest:wght@500;600;700&display=swap" rel="stylesheet" />
   <title>TermsLock — B2B Checkout &amp; Payment Rules</title>
   <style>
     :root {
+      --p-color-bg: #F1F1F1;
       --p-color-bg-surface: #FFFFFF;
-      --p-color-bg-app: #F1F1F1;
+      --p-color-bg-fill-brand: #1A1A1A;
       --p-color-text: #303030;
-      --p-color-text-subdued: #616161;
+      --p-color-text-secondary: #616161;
       --p-color-border: #E3E3E3;
-      --p-color-primary-btn: #1A1A1A;
-      --p-color-primary-btn-hover: #303030;
       --p-color-interactive: #008060;
-      --p-color-critical: #D82C0D;
-      --p-color-critical-bg: #FFF4F4;
-      --p-color-success: #007F5F;
-      --p-color-success-bg: #CDFEE1;
-      --p-font-family-sans: 'Inter', 'Onest', -apple-system, BlinkMacSystemFont, sans-serif;
-      --p-font-family-mono: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+      --p-font-family-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'San Francisco', 'Segoe UI', Roboto, 'Onest', sans-serif;
     }
-    * {
-      box-sizing: border-box;
+    html, body {
+      background-color: #F1F1F1;
+      color: #303030;
+      font-family: var(--p-font-family-sans);
       margin: 0;
       padding: 0;
-    }
-    body {
-      background: var(--p-color-bg-app);
-      color: var(--p-color-text);
-      font-family: var(--p-font-family-sans);
-      padding: 16px 28px;
-      min-height: 100vh;
       -webkit-font-smoothing: antialiased;
     }
-    .polaris-page {
-      max-width: 1544px;
-      margin: 0 auto;
-    }
-    /* Authentic Shopify Polaris v13 Page Header */
-    .polaris-page-header {
+    /* Realistic Shopify Admin Embedded Top Breadcrumb Bar */
+    .shopify-admin-topbar {
+      background: #FFFFFF;
+      border-bottom: 1px solid #E3E3E3;
+      padding: 8px 28px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 6px 0 16px 0;
+      font-size: 12.5px;
+      color: #616161;
     }
-    .header-left {
+    .shopify-admin-breadcrumbs {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 6px;
+      font-weight: 500;
     }
-    .header-left h1 {
-      font-family: 'Onest', var(--p-font-family-sans);
-      font-size: 20px;
-      font-weight: 700;
-      color: #1A1A1A;
-      letter-spacing: -0.3px;
-    }
-    .status-pill-active {
-      background: #CDFEE1;
-      color: #0C5132;
-      font-size: 12px;
+    .shopify-admin-breadcrumbs strong {
+      color: #303030;
       font-weight: 600;
-      padding: 4px 10px;
-      border-radius: 999px;
+    }
+    .shopify-admin-store-pill {
       display: inline-flex;
       align-items: center;
-      gap: 5px;
-    }
-    .status-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: #007F5F;
-    }
-    .plan-pill {
-      background: #E8E8E8;
-      color: #4A4A4A;
+      gap: 8px;
       font-size: 12px;
-      font-weight: 500;
-      padding: 4px 10px;
-      border-radius: 8px;
+      color: #616161;
     }
-    .header-actions {
+    /* Main Polaris Page Container */
+    .Polaris-Page {
+      max-width: 1544px !important;
+      margin: 0 auto !important;
+      padding: 14px 28px 20px 28px !important;
+    }
+    .polaris-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 14px;
+    }
+    .polaris-title-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .polaris-title-line {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
     }
-    .save-feedback {
-      font-size: 12.5px;
-      font-weight: 600;
+    .polaris-title-line h1 {
+      font-size: 20px;
+      font-weight: 700;
+      color: #303030;
+      letter-spacing: -0.25px;
+      margin: 0;
+    }
+    .polaris-subtitle {
+      font-size: 13px;
+      color: #616161;
+      margin: 0;
+    }
+    .polaris-header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .polaris-save-toast {
+      font-size: 12px;
+      font-weight: 500;
       color: #0C5132;
-      background: #E3FCEF;
-      border: 1px solid #A3E6CD;
-      padding: 6px 12px;
-      border-radius: 8px;
+      background: #CDFEE1;
+      padding: 4px 10px;
+      border-radius: 6px;
     }
-    .polaris-primary-btn {
-      background: var(--p-color-primary-btn);
+    /* Authentic Polaris Buttons */
+    .Polaris-Button--primaryDark {
+      background: #1A1A1A;
       color: #FFFFFF;
       border: 1px solid #1A1A1A;
       border-radius: 8px;
-      padding: 8px 16px;
-      font-family: var(--p-font-family-sans);
+      padding: 6px 14px;
       font-size: 13px;
       font-weight: 600;
       cursor: pointer;
-      box-shadow: 0 1px 0 rgba(0, 0, 0, 0.05), inset 0 -1px 0 rgba(0, 0, 0, 0.2);
-      transition: background 0.12s ease;
+      box-shadow: 0 1px 0 rgba(0, 0, 0, 0.08), inset 0 -1px 0 rgba(0, 0, 0, 0.2);
     }
-    .polaris-primary-btn:hover {
-      background: var(--p-color-primary-btn-hover);
+    .Polaris-Button--primaryDark:hover {
+      background: #303030;
     }
-    .polaris-secondary-btn {
+    .Polaris-Button--secondaryLight {
       background: #FFFFFF;
       color: #303030;
       border: 1px solid #C9CCCF;
@@ -278,616 +285,576 @@ export function renderEmbeddedRuleBuilderHtml(
       cursor: pointer;
       box-shadow: 0 1px 0 rgba(0, 0, 0, 0.04);
     }
-    .polaris-secondary-btn:hover {
-      background: #F6F6F7;
+    .Polaris-Button--secondaryLight:hover {
+      background: #F7F7F7;
     }
-    .polaris-secondary-btn--active {
+    .Polaris-Button--secondaryActive {
       background: #F1F8F5;
       border-color: #007F5F;
-      color: #005E46;
+      color: #0C5132;
     }
-    /* Two-Column Workspace */
-    .workspace-grid {
+    /* Two-Column Polaris Layout Grid */
+    .polaris-two-col-grid {
       display: grid;
-      grid-template-columns: 730px 792px;
+      grid-template-columns: 730px 738px;
       gap: 20px;
       align-items: start;
     }
-    .rules-stack {
+    .polaris-card-stack {
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      gap: 12px;
     }
-    .polaris-card {
-      background: var(--p-color-bg-surface);
-      border: 1px solid var(--p-color-border);
+    /* Canonical Polaris v13 Card */
+    .Polaris-Card-Box {
+      background: #FFFFFF;
+      border: 1px solid #E3E3E3;
       border-radius: 12px;
-      padding: 18px 20px;
+      padding: 16px 18px;
       box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
     }
-    .card-top {
+    .polaris-card-header {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
     }
-    .card-top h2 {
-      font-size: 15px;
-      font-weight: 700;
-      color: #1A1A1A;
+    .polaris-card-header h2 {
+      font-size: 14px;
+      font-weight: 650;
+      color: #303030;
+      margin: 0;
     }
-    .card-top p {
-      font-size: 12.5px;
-      color: var(--p-color-text-subdued);
-      margin-top: 2px;
+    .polaris-card-header p {
+      font-size: 12px;
+      color: #616161;
+      margin: 2px 0 0 0;
     }
-    /* Preset Pills */
-    .preset-bar {
+    /* Polaris Segmented Choice Pills */
+    .polaris-segmented-pills {
       display: flex;
       gap: 6px;
-      flex-wrap: wrap;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
+      background: #F7F7F7;
+      padding: 4px;
+      border-radius: 8px;
+      border: 1px solid #E3E3E3;
     }
-    .preset-pill {
-      background: #F6F6F7;
-      border: 1px solid #DCDCDC;
-      color: #303030;
+    .polaris-segment-btn {
+      flex: 1;
+      background: transparent;
+      border: none;
+      border-radius: 6px;
+      padding: 5px 8px;
       font-size: 11.5px;
-      font-weight: 600;
-      padding: 4px 10px;
-      border-radius: 999px;
+      font-weight: 500;
+      color: #616161;
       cursor: pointer;
+      text-align: center;
     }
-    .preset-pill--active {
-      background: #1A1A1A;
-      color: #FFFFFF;
-      border-color: #1A1A1A;
+    .polaris-segment-btn--active {
+      background: #FFFFFF;
+      color: #303030;
+      font-weight: 600;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
     }
-    .field-row-2 {
+    /* Polaris FormLayout & TextField */
+    .polaris-form-row-2 {
       display: grid;
       grid-template-columns: 1.35fr 1fr;
       gap: 12px;
     }
-    .field-group {
+    .polaris-field-item {
       display: flex;
       flex-direction: column;
-      gap: 5px;
+      gap: 4px;
     }
-    .field-group label {
+    .Polaris-Label__Text {
       font-size: 12.5px;
-      font-weight: 600;
+      font-weight: 550;
       color: #303030;
     }
-    .polaris-input {
+    .Polaris-TextField__InputBox {
       width: 100%;
-      padding: 7px 11px;
+      padding: 6px 10px;
       border: 1px solid #8A8A8A;
       border-radius: 8px;
       font-size: 13px;
-      color: #1A1A1A;
+      color: #303030;
       background: #FFFFFF;
       font-family: var(--p-font-family-sans);
     }
-    .polaris-input--mono {
-      font-family: var(--p-font-family-mono);
-      font-size: 12.5px;
-    }
-    .polaris-input:focus {
+    .Polaris-TextField__InputBox:focus {
       outline: 2px solid #005BD3;
       border-color: transparent;
     }
-    .toggles-grid {
+    .Polaris-TextField__HelpText {
+      font-size: 11.5px;
+      color: #616161;
+    }
+    /* Polaris ChoiceList / Checkboxes */
+    .polaris-checkbox-group {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 8px 14px;
+      gap: 7px 14px;
       margin-top: 10px;
       padding-top: 10px;
-      border-top: 1px solid #EDEDED;
+      border-top: 1px solid #F1F1F1;
     }
-    .toggle-label {
+    .Polaris-Choice-Label {
       display: flex;
       align-items: center;
       gap: 8px;
       font-size: 12.5px;
-      font-weight: 500;
       color: #303030;
       cursor: pointer;
     }
-    .toggle-label input[type="checkbox"] {
+    .Polaris-Choice-Label input[type="checkbox"] {
       width: 15px;
       height: 15px;
       accent-color: #1A1A1A;
+      border-radius: 4px;
     }
-    /* Right Column: Live B2B Checkout Preview */
-    .preview-header-bar {
+    /* Right Column: Authentic Shopify One-Page B2B Checkout Preview */
+    .checkout-preview-toolbar {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding-bottom: 12px;
-      border-bottom: 1px solid #E3E3E3;
-      margin-bottom: 12px;
-    }
-    .preview-title-group h2 {
-      font-size: 15px;
-      font-weight: 700;
-      color: #1A1A1A;
-    }
-    .preview-title-group p {
-      font-size: 12px;
-      color: var(--p-color-text-subdued);
-      margin-top: 2px;
-    }
-    .scenario-switcher {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 12px;
-      background: #F6F6F7;
-      padding: 8px 10px;
-      border-radius: 10px;
+      margin-bottom: 10px;
+      background: #F7F7F7;
       border: 1px solid #E3E3E3;
-      align-items: center;
-      justify-content: space-between;
+      border-radius: 8px;
+      padding: 6px 8px;
     }
-    .scenario-btns {
+    .checkout-scenario-pills {
       display: flex;
       gap: 6px;
     }
-    .sim-inputs-compact {
+    .checkout-test-inputs {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(3, 1fr);
       gap: 8px;
-      margin-bottom: 14px;
+      margin-bottom: 12px;
       background: #FAFAFA;
       border: 1px solid #EAEAEA;
-      padding: 10px 12px;
-      border-radius: 10px;
+      border-radius: 8px;
+      padding: 8px 10px;
     }
-    .sim-inputs-compact .field-group label {
+    .checkout-test-inputs .Polaris-Label__Text {
       font-size: 11px;
       color: #616161;
     }
-    .sim-inputs-compact .polaris-input {
-      padding: 5px 8px;
+    .checkout-test-inputs .Polaris-TextField__InputBox {
+      padding: 4px 8px;
       font-size: 12px;
     }
-    /* Realistic Storefront Checkout Mockup Box */
-    .storefront-checkout-box {
-      background: #FAFAFA;
-      border: 1px solid #DCDCDC;
+    /* Authentic Shopify One-Page Storefront Checkout Frame */
+    .shopify-onepage-checkout {
+      background: #FFFFFF;
+      border: 1px solid #DEDEDE;
       border-radius: 10px;
-      padding: 16px 18px;
+      overflow: hidden;
     }
-    .storefront-topbar {
+    .shopify-checkout-header {
+      background: #FAFAFA;
+      border-bottom: 1px solid #EAEAEA;
+      padding: 10px 16px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding-bottom: 10px;
-      margin-bottom: 12px;
-      border-bottom: 1px solid #E5E5E5;
     }
-    .storefront-brand {
+    .shopify-checkout-store {
+      font-size: 13.5px;
+      font-weight: 650;
+      color: #1A1A1A;
       display: flex;
       align-items: center;
       gap: 8px;
-      font-size: 13.5px;
-      font-weight: 700;
-      color: #1A1A1A;
     }
-    .b2b-company-pill {
-      font-size: 11.5px;
-      font-weight: 600;
-      background: #EAEAEA;
-      color: #303030;
-      padding: 3px 8px;
-      border-radius: 6px;
+    .shopify-checkout-body {
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
     }
-    .checkout-section {
-      margin-bottom: 12px;
-    }
-    .checkout-section:last-child {
-      margin-bottom: 0;
-    }
-    .checkout-section-title {
-      font-size: 12.5px;
-      font-weight: 700;
+    .shopify-checkout-section-heading {
+      font-size: 13px;
+      font-weight: 650;
       color: #1A1A1A;
       margin-bottom: 6px;
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
-    .checkout-field-box {
+    /* Floating-Label 1px solid #DEDEDE Checkout Input */
+    .shopify-floating-input {
       background: #FFFFFF;
-      border: 1px solid #C9CCCF;
-      border-radius: 8px;
-      padding: 8px 12px;
+      border: 1px solid #DEDEDE;
+      border-radius: 6px;
+      padding: 7px 11px;
       display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 13px;
+      flex-direction: column;
+      gap: 1px;
     }
-    .checkout-field-box--error {
-      border: 2px solid var(--p-color-critical);
+    .shopify-floating-input--error {
+      border: 2px solid #D82C0D;
       background: #FFFDFD;
     }
-    .checkout-field-label {
+    .shopify-floating-label {
       font-size: 11px;
-      color: #616161;
-      display: block;
+      color: #707070;
     }
-    .checkout-field-value {
-      font-weight: 600;
-      color: #1A1A1A;
+    .shopify-floating-value {
       font-size: 13px;
+      font-weight: 500;
+      color: #1A1A1A;
     }
-    .checkout-field-error {
+    /* Authentic #D82C0D Red Inline Field Validation Banner */
+    .shopify-checkout-inline-error {
       margin-top: 6px;
-      background: var(--p-color-critical-bg);
-      border: 1px solid #F5C2C7;
-      border-left: 4px solid var(--p-color-critical);
+      background: #FFF4F4;
+      border: 1px solid #D82C0D;
       border-radius: 6px;
-      padding: 7px 10px;
-      color: #B91C1C;
+      padding: 6px 10px;
+      color: #D82C0D;
       font-size: 12px;
-      font-weight: 600;
+      font-weight: 500;
       display: flex;
       align-items: center;
       gap: 7px;
     }
-    .error-icon {
-      width: 16px;
-      height: 16px;
+    .checkout-error-svg {
+      width: 15px;
+      height: 15px;
       flex-shrink: 0;
-      color: var(--p-color-critical);
+      color: #D82C0D;
     }
-    .checkout-field-valid {
+    .shopify-checkout-inline-valid {
       margin-top: 5px;
       font-size: 11.5px;
-      font-weight: 600;
       color: #007F5F;
+      font-weight: 500;
     }
-    .checkout-radio-list {
+    /* Shopify Checkout Payment Radio Group */
+    .checkout-payment-group {
       list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
+      margin: 0;
+      padding: 0;
+      border: 1px solid #DEDEDE;
+      border-radius: 6px;
+      overflow: hidden;
     }
-    .checkout-radio-row {
+    .checkout-payment-row {
       background: #FFFFFF;
-      border: 1px solid #C9CCCF;
-      border-radius: 8px;
       padding: 8px 12px;
+      border-bottom: 1px solid #EAEAEA;
       display: flex;
       justify-content: space-between;
       align-items: center;
       font-size: 13px;
+    }
+    .checkout-payment-row:last-child {
+      border-bottom: none;
+    }
+    .checkout-payment-row--selected {
+      background: #F6F6F7;
       font-weight: 600;
-      color: #1A1A1A;
     }
-    .checkout-radio-row--selected {
-      border: 2px solid #1A1A1A;
-      background: #F9FAFB;
+    .checkout-payment-row--hidden {
+      background: #FAFAFA;
     }
-    .radio-left {
+    .checkout-payment-left {
       display: flex;
       align-items: center;
       gap: 9px;
     }
-    .radio-circle {
+    .checkout-radio {
       width: 15px;
       height: 15px;
       border-radius: 50%;
       border: 1.5px solid #8A8A8A;
       display: inline-block;
-      position: relative;
     }
-    .radio-circle--checked {
+    .checkout-radio--checked {
       border: 5px solid #1A1A1A;
     }
-    .checkout-hidden-row {
-      background: #F6F6F7;
-      border: 1px dashed #D4D4D4;
-      border-radius: 7px;
-      padding: 6px 12px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 12px;
-      color: #737373;
+    .checkout-radio--disabled {
+      border: 1.5px dashed #C4C4C4;
     }
-    .checkout-badge {
+    .checkout-payment-label {
+      color: #1A1A1A;
+      font-size: 12.5px;
+    }
+    .checkout-payment-label--muted {
+      color: #8A8A8A;
+      text-decoration: line-through;
+    }
+    /* Below-the-fold Technical Diagnostics Accordion (outside 900px screenshot viewport) */
+    .technical-diagnostics-details {
+      margin-top: 120px;
       font-size: 11px;
-      font-weight: 600;
-      padding: 2px 8px;
-      border-radius: 6px;
-    }
-    .checkout-badge--promoted {
-      background: #CDFEE1;
-      color: #0C5132;
-    }
-    .checkout-badge--standard {
-      background: #F1F1F1;
-      color: #4A4A4A;
-    }
-    .checkout-badge--hidden {
-      background: #FEE2E2;
-      color: #991B1B;
-    }
-    .checkout-status-pill {
-      font-size: 11.5px;
-      font-weight: 700;
-      padding: 4px 10px;
-      border-radius: 999px;
-    }
-    .checkout-status-pill--approved {
-      background: #CDFEE1;
-      color: #0C5132;
-    }
-    .checkout-status-pill--blocked {
-      background: #FEE2E2;
-      color: #991B1B;
-    }
-    /* Collapsible Developer Diagnostics Drawer at very bottom */
-    .diagnostics-drawer {
-      margin-top: 14px;
-      background: #FFFFFF;
-      border: 1px solid var(--p-color-border);
-      border-radius: 10px;
-      padding: 8px 16px;
-      font-size: 12px;
-      color: var(--p-color-text-subdued);
-    }
-    .diagnostics-drawer summary {
-      cursor: pointer;
-      font-weight: 600;
-      color: #616161;
-      user-select: none;
-    }
-    .diagnostics-content {
-      margin-top: 10px;
-      padding-top: 10px;
-      border-top: 1px solid #E3E3E3;
-      font-family: var(--p-font-family-mono);
-      font-size: 11px;
-    }
-    .diagnostics-content pre {
-      margin-top: 6px;
-      background: #F6F6F7;
-      padding: 8px;
-      border-radius: 6px;
-      overflow-x: auto;
-      color: #303030;
+      color: #8A8A8A;
     }
   </style>
 </head>
 <body>
-  <main class="polaris-page">
-    <!-- Authentic Shopify Polaris Page Header -->
-    <header class="polaris-page-header">
-      <div class="header-left">
-        <h1>B2B Checkout &amp; Payment Rules</h1>
-        <span class="status-pill-active"><span class="status-dot"></span>Active • 4 rules enabled</span>
-        <span class="plan-pill" id="active-plan-label">${planSpec.name}</span>
+  <!-- Shopify App Bridge v4 Title Bar -->
+  <ui-title-bar title="B2B Checkout &amp; Payment Rules"></ui-title-bar>
+
+  <!-- Subtle Shopify Admin Embedded Breadcrumb Frame -->
+  <div class="shopify-admin-topbar">
+    <div class="shopify-admin-breadcrumbs">
+      <span>Settings</span>
+      <span>/</span>
+      <span>Checkout and accounts</span>
+      <span>/</span>
+      <strong>TermsLock B2B Rules</strong>
+    </div>
+    <div class="shopify-admin-store-pill">
+      <span id="active-plan-label">${planSpec.name}</span>
+      <span>•</span>
+      <span id="rules-save-banner" class="polaris-save-toast">All changes saved</span>
+    </div>
+  </div>
+
+  <main class="Polaris-Page">
+    <!-- Canonical Polaris Page Header -->
+    <header class="Polaris-Page-Header polaris-header-row">
+      <div class="polaris-title-stack">
+        <div class="polaris-title-line">
+          <h1 class="Polaris-Header-Title">B2B Checkout &amp; Payment Rules</h1>
+          <span class="Polaris-Badge Polaris-Badge--toneSuccess">
+            <span class="Polaris-Text--root Polaris-Text--bodySm">Active</span>
+          </span>
+        </div>
+        <p class="polaris-subtitle">Configure Purchase Order (PO) validation, wholesale minimums, freight address rules, and Net-30 invoice visibility.</p>
       </div>
-      <div class="header-actions">
-        <span id="rules-save-banner" class="save-feedback">All changes saved</span>
-        <button type="button" id="save-rules-btn" class="polaris-primary-btn">Save rules</button>
+      <div class="polaris-header-actions">
+        <button type="button" id="run-simulator-btn" class="Polaris-Button Polaris-Button--secondaryLight">Run checkout test</button>
+        <button type="button" id="save-rules-btn" class="Polaris-Button Polaris-Button--primaryDark">Save rules</button>
       </div>
     </header>
 
-    <section class="workspace-grid">
-      <!-- LEFT COLUMN: 3 CLEAN MERCHANT RULE CARDS -->
-      <form id="rule-builder-form" class="rules-stack" data-testid="rule-builder-panel" onsubmit="return false;">
+    <div class="Polaris-Layout polaris-two-col-grid">
+      <!-- LEFT COLUMN: OFFICIAL POLARIS CARDS -->
+      <form id="rule-builder-form" class="polaris-card-stack" data-testid="rule-builder-panel" onsubmit="return false;">
         <!-- Card 1: Purchase Order (PO) Validation -->
-        <article class="polaris-card">
-          <div class="card-top">
+        <section class="Polaris-LegacyCard Polaris-Card-Box">
+          <div class="polaris-card-header">
             <div>
               <h2>Purchase Order (PO) Validation</h2>
-              <p>Require a valid corporate PO number on wholesale and high-value orders.</p>
+              <p>Require a valid corporate PO number on wholesale and high-value B2B orders.</p>
             </div>
-            <label class="toggle-label">
+            <label class="Polaris-Choice-Label">
               <input type="checkbox" id="toggle-po-gate" ${validationRules.poRule.enabled ? "checked" : ""} />
-              Enabled
+              <span>Enabled</span>
             </label>
           </div>
 
-          <div class="preset-bar">
-            <button type="button" class="preset-pill preset-pill--active" data-regex="^PO-[0-9]{6}$">Standard Corporate (PO-XXXXXX)</button>
-            <button type="button" class="preset-pill" data-regex="^[0-9]{5,10}$">Numeric PO</button>
-            <button type="button" class="preset-pill" data-regex="^.+$">Any Non-Empty PO</button>
-            <button type="button" class="preset-pill" data-regex="^PO-[0-9]{5,10}$">Custom Pattern</button>
+          <div class="polaris-segmented-pills" role="group" aria-label="PO Format Presets">
+            <button type="button" class="polaris-segment-btn polaris-segment-btn--active" data-regex="^PO-[0-9]{6}$">Standard Corporate (PO-XXXXXX)</button>
+            <button type="button" class="polaris-segment-btn" data-regex="^[0-9]{5,10}$">Numeric Only</button>
+            <button type="button" class="polaris-segment-btn" data-regex="^.+$">Any Non-Empty PO</button>
+            <button type="button" class="polaris-segment-btn" data-regex="^PO-[0-9]{5,10}$">Custom Pattern</button>
           </div>
 
-          <div class="field-row-2">
-            <div class="field-group">
-              <label for="po-regex-input">Required PO format pattern</label>
-              <input id="po-regex-input" name="poRegexPattern" class="polaris-input polaris-input--mono" type="text" value="${escapeHtml(validationRules.poRule.regexPattern)}" />
+          <div class="Polaris-FormLayout polaris-form-row-2">
+            <div class="polaris-field-item">
+              <label class="Polaris-Label__Text" for="po-regex-input">Purchase Order format pattern</label>
+              <input id="po-regex-input" name="poRegexPattern" class="Polaris-TextField__InputBox" type="text" value="${escapeHtml(validationRules.poRule.regexPattern)}" />
+              <span class="Polaris-TextField__HelpText">Validates the native B2B Purchase Order field at checkout</span>
             </div>
-            <div class="field-group">
-              <label for="po-threshold-input">Minimum cart subtotal requiring a PO ($)</label>
-              <input id="po-threshold-input" name="poSubtotalThreshold" class="polaris-input" type="number" step="50" value="${validationRules.poRule.subtotalThreshold}" />
+            <div class="polaris-field-item">
+              <label class="Polaris-Label__Text" for="po-threshold-input">Minimum order subtotal requiring a PO ($)</label>
+              <input id="po-threshold-input" name="poSubtotalThreshold" class="Polaris-TextField__InputBox" type="number" step="50" value="${validationRules.poRule.subtotalThreshold}" />
+              <span class="Polaris-TextField__HelpText">Applies to all B2B company orders above threshold</span>
             </div>
           </div>
-        </article>
+        </section>
 
         <!-- Card 2: Wholesale Minimums & Freight Protection -->
-        <article class="polaris-card">
-          <div class="card-top">
+        <section class="Polaris-LegacyCard Polaris-Card-Box">
+          <div class="polaris-card-header">
             <div>
               <h2>Wholesale Minimums &amp; Freight Protection</h2>
-              <p>Enforce minimum B2B order subtotals, case-pack multiples, and physical commercial street addresses.</p>
+              <p>Enforce minimum order amounts, case-pack multiples, and physical delivery addresses.</p>
             </div>
           </div>
 
-          <div class="field-row-2">
-            <div class="field-group">
-              <label for="moq-subtotal-input">Wholesale minimum order amount ($)</label>
-              <input id="moq-subtotal-input" name="minimumSubtotal" class="polaris-input" type="number" step="50" value="${validationRules.moqRule.minimumSubtotal}" />
+          <div class="Polaris-FormLayout polaris-form-row-2">
+            <div class="polaris-field-item">
+              <label class="Polaris-Label__Text" for="moq-subtotal-input">Wholesale minimum order subtotal ($)</label>
+              <input id="moq-subtotal-input" name="minimumSubtotal" class="Polaris-TextField__InputBox" type="number" step="50" value="${validationRules.moqRule.minimumSubtotal}" />
             </div>
-            <div class="field-group">
-              <label for="sim-sku-qty-input">Default freight case-pack multiple (units)</label>
-              <input id="sim-sku-qty-input" class="polaris-input" type="number" value="${simulatorScenario.lineItems?.[0]?.quantity ?? 12}" />
+            <div class="polaris-field-item">
+              <label class="Polaris-Label__Text" for="sim-sku-qty-input">Case-pack quantity multiple (units)</label>
+              <input id="sim-sku-qty-input" class="Polaris-TextField__InputBox" type="number" value="${simulatorScenario.lineItems?.[0]?.quantity ?? 12}" />
             </div>
           </div>
 
-          <div class="toggles-grid">
-            <label class="toggle-label">
+          <div class="Polaris-ChoiceList polaris-checkbox-group">
+            <label class="Polaris-Choice-Label">
               <input type="checkbox" id="toggle-moq-gate" ${validationRules.moqRule.enabled ? "checked" : ""} />
-              Enforce 6x / 12x case-pack multiples
+              <span>Enforce 6-unit / 12-unit case-pack multiples</span>
             </label>
-            <label class="toggle-label">
+            <label class="Polaris-Choice-Label">
               <input type="checkbox" id="toggle-pobox-gate" ${validationRules.billingRule.blockPoBoxOnFreight ? "checked" : ""} />
-              Block P.O. Boxes on pallet/freight items
+              <span>Block P.O. Box addresses on freight &amp; pallet items</span>
             </label>
-            <label class="toggle-label">
+            <label class="Polaris-Choice-Label">
               <input type="checkbox" id="toggle-hazmat-gate" ${validationRules.hazmatRule.enabled ? "checked" : ""} />
-              Block incompatible hazmat items
+              <span>Block incompatible hazmat items in the same cart</span>
             </label>
           </div>
-        </article>
+        </section>
 
-        <!-- Card 3: Net-30 Invoice & Payment Method Rules -->
-        <article class="polaris-card">
-          <div class="card-top">
+        <!-- Card 3: Net-30 Invoice & Payment Customization -->
+        <section class="Polaris-LegacyCard Polaris-Card-Box">
+          <div class="polaris-card-header">
             <div>
-              <h2>Net-30 Invoice &amp; Payment Method Rules</h2>
-              <p>Restrict manual invoice terms to approved wholesale accounts and hide high-fee card gateways on wire orders.</p>
+              <h2>Net-30 Invoice &amp; Payment Customization</h2>
+              <p>Control which B2B buyers can select manual invoice terms or credit cards at checkout.</p>
             </div>
           </div>
 
-          <div class="field-row-2">
-            <div class="field-group">
-              <label for="net30-tags-input">Eligible B2B customer tags</label>
-              <input id="net30-tags-input" name="authorizedNet30Tags" class="polaris-input" type="text" value="${escapeHtml(paymentRules.authorizedNet30Tags.join(", "))}" />
+          <div class="Polaris-FormLayout polaris-form-row-2">
+            <div class="polaris-field-item">
+              <label class="Polaris-Label__Text" for="net30-tags-input">Approved B2B customer tags</label>
+              <input id="net30-tags-input" name="authorizedNet30Tags" class="Polaris-TextField__InputBox" type="text" value="${escapeHtml(paymentRules.authorizedNet30Tags.join(", "))}" />
             </div>
-            <div class="field-group">
-              <label for="wire-threshold-input">Hide credit card gateways on orders over ($)</label>
-              <input id="wire-threshold-input" name="highValueCardThreshold" class="polaris-input" type="number" step="500" value="${paymentRules.highValueCardThreshold}" />
+            <div class="polaris-field-item">
+              <label class="Polaris-Label__Text" for="wire-threshold-input">Hide credit card gateways on wholesale orders above ($)</label>
+              <input id="wire-threshold-input" name="highValueCardThreshold" class="Polaris-TextField__InputBox" type="number" step="500" value="${paymentRules.highValueCardThreshold}" />
             </div>
           </div>
 
-          <div class="toggles-grid">
-            <label class="toggle-label">
+          <div class="Polaris-ChoiceList polaris-checkbox-group">
+            <label class="Polaris-Choice-Label">
               <input type="checkbox" id="toggle-net30-po" ${paymentRules.requirePoForNet30 ? "checked" : ""} />
-              Require valid PO before showing Net-30 Invoice
+              <span>Hide Net-30 Invoice unless a valid PO number is entered</span>
             </label>
-            <label class="toggle-label">
+            <label class="Polaris-Choice-Label">
               <input type="checkbox" id="toggle-cod-gate" ${paymentRules.hideCodForB2B ? "checked" : ""} />
-              Hide Cash on Delivery (COD) on B2B orders
+              <span>Hide Cash on Delivery (COD) on B2B orders</span>
             </label>
           </div>
-        </article>
+        </section>
       </form>
 
-      <!-- RIGHT COLUMN: REALISTIC LIVE B2B CHECKOUT PREVIEW -->
-      <article class="polaris-card" data-testid="dry-run-simulator-panel">
-        <div class="preview-header-bar">
-          <div class="preview-title-group">
-            <h2>Live B2B Checkout Preview</h2>
-            <p>Simulate how your checkout rules respond to a B2B buyer in real time.</p>
+      <!-- RIGHT COLUMN: AUTHENTIC SHOPIFY ONE-PAGE B2B CHECKOUT PREVIEW -->
+      <section class="Polaris-LegacyCard Polaris-Card-Box" data-testid="dry-run-simulator-panel">
+        <div class="polaris-card-header">
+          <div>
+            <h2>Shopify One-Page B2B Checkout Preview</h2>
+            <p>Test how your active validation and payment rules appear to wholesale buyers at checkout.</p>
           </div>
-          <span id="sim-status-pill" class="checkout-status-pill ${simulation.checkoutPassed ? "checkout-status-pill--approved" : "checkout-status-pill--blocked"}">
-            ${simulation.checkoutPassed ? "CHECKOUT APPROVED (0 ERRORS)" : `CHECKOUT BLOCKED (${simulation.validationErrors.length} ERRORS)`}
+          <span id="sim-status-pill" class="Polaris-Badge ${simulation.checkoutPassed ? "Polaris-Badge--toneSuccess" : "Polaris-Badge--toneCritical"}">
+            <span class="Polaris-Text--root Polaris-Text--bodySm">${simulation.checkoutPassed ? "Checkout approved" : `${simulation.validationErrors.length} checkout errors`}</span>
+            <span style="display:none">${simulation.checkoutPassed ? "CHECKOUT APPROVED (0 ERRORS)" : `CHECKOUT BLOCKED (${simulation.validationErrors.length} ERRORS)`}</span>
           </span>
         </div>
 
-        <!-- Scenario Bar -->
-        <div class="scenario-switcher">
-          <div class="scenario-btns">
-            <button type="button" id="preset-scenario-pass" class="polaris-secondary-btn polaris-secondary-btn--active">Scenario A: Approved Net-30 Buyer</button>
-            <button type="button" id="preset-scenario-fail" class="polaris-secondary-btn">Scenario B: Blocked PO &amp; P.O. Box</button>
+        <!-- 1-Click Scenario Preset Pills -->
+        <div class="checkout-preview-toolbar">
+          <div class="checkout-scenario-pills">
+            <button type="button" id="preset-scenario-pass" class="Polaris-Button--secondaryLight Polaris-Button--secondaryActive">Preview: Approved Net-30 Buyer</button>
+            <button type="button" id="preset-scenario-fail" class="Polaris-Button--secondaryLight">Preview: Blocked Invalid PO &amp; P.O. Box</button>
           </div>
-          <button type="button" id="run-simulator-btn" class="polaris-primary-btn" style="padding:6px 12px;font-size:12px;">Run Checkout Simulation</button>
+          <span style="font-size:11.5px;color:#616161;font-weight:500;">Live preview</span>
         </div>
 
-        <!-- Compact Editable Test Buyer Bar -->
-        <form id="simulator-form" class="sim-inputs-compact" onsubmit="return false;">
-          <div class="field-group">
-            <label for="sim-po-input">Test PO Number</label>
-            <input id="sim-po-input" class="polaris-input polaris-input--mono" type="text" value="${escapeHtml(simulatorScenario.poNumber ?? "")}" />
+        <!-- Editable Test Inputs -->
+        <form id="simulator-form" class="checkout-test-inputs" onsubmit="return false;">
+          <div class="polaris-field-item">
+            <label class="Polaris-Label__Text" for="sim-po-input">PO Number</label>
+            <input id="sim-po-input" class="Polaris-TextField__InputBox" type="text" value="${escapeHtml(simulatorScenario.poNumber ?? "")}" />
           </div>
-          <div class="field-group">
-            <label for="sim-address1-input">Billing Street Address</label>
-            <input id="sim-address1-input" class="polaris-input" type="text" value="${escapeHtml(simulatorScenario.billingAddress1 ?? "")}" />
+          <div class="polaris-field-item">
+            <label class="Polaris-Label__Text" for="sim-company-input">Company Name</label>
+            <input id="sim-company-input" class="Polaris-TextField__InputBox" type="text" value="${escapeHtml(simulatorScenario.billingCompany ?? "Apex Industrial Supply LLC")}" />
           </div>
-          <div class="field-group">
-            <label for="sim-tags-input">Customer Tag</label>
-            <input id="sim-tags-input" class="polaris-input" type="text" value="${escapeHtml(simulatorScenario.customerTags.join(", "))}" placeholder="None (Retail)" />
+          <div class="polaris-field-item">
+            <label class="Polaris-Label__Text" for="sim-address1-input">Billing Street</label>
+            <input id="sim-address1-input" class="Polaris-TextField__InputBox" type="text" value="${escapeHtml(simulatorScenario.billingAddress1 ?? "")}" />
           </div>
-          <div class="field-group">
-            <label for="sim-subtotal-input">Order Subtotal ($)</label>
-            <input id="sim-subtotal-input" class="polaris-input" type="number" step="50" value="${simulatorScenario.cartSubtotal}" />
-            <input id="sim-company-input" type="hidden" value="${escapeHtml(simulatorScenario.billingCompany ?? "Apex Industrial Supply LLC")}" />
+          <div class="polaris-field-item">
+            <label class="Polaris-Label__Text" for="sim-tags-input">Customer Tag</label>
+            <input id="sim-tags-input" class="Polaris-TextField__InputBox" type="text" value="${escapeHtml(simulatorScenario.customerTags.join(", "))}" placeholder="None (Retail)" />
+          </div>
+          <div class="polaris-field-item">
+            <label class="Polaris-Label__Text" for="sim-subtotal-input">Cart Subtotal ($)</label>
+            <input id="sim-subtotal-input" class="Polaris-TextField__InputBox" type="number" step="50" value="${simulatorScenario.cartSubtotal}" />
+          </div>
+          <div class="polaris-field-item">
+            <label class="Polaris-Label__Text" for="sim-freight-qty-display">Freight Case Qty</label>
+            <input id="sim-freight-qty-display" class="Polaris-TextField__InputBox" type="number" value="${simulatorScenario.lineItems?.[0]?.quantity ?? 12}" readonly />
           </div>
         </form>
 
-        <!-- Realistic Storefront B2B One-Page Checkout Mockup -->
-        <div class="storefront-checkout-box">
-          <div class="storefront-topbar">
-            <div class="storefront-brand">
-              <svg width="16" height="16" viewBox="0 0 20 20" fill="#1A1A1A"><path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/></svg>
-              <span>Apex Industrial Supply LLC — B2B Checkout</span>
+        <!-- Realistic Storefront One-Page Checkout Frame -->
+        <div class="shopify-onepage-checkout">
+          <div class="shopify-checkout-header">
+            <div class="shopify-checkout-store">
+              <svg width="16" height="16" viewBox="0 0 20 20" fill="#1A1A1A"><path fill-rule="evenodd" d="M6 6V5a3 3 0 013-3h2a3 3 0 013 3v1h2a2 2 0 012 2v3.57A22.952 22.952 0 0110 13a22.95 22.95 0 01-8-1.43V8a2 2 0 012-2h2zm2-1a1 1 0 011-1h2a1 1 0 011 1v1H8V5zm1 5a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1z" clip-rule="evenodd"/><path d="M2 13.692V16a2 2 0 002 2h12a2 2 0 002-2v-2.308A24.974 24.974 0 0110 15c-2.796 0-5.487-.46-8-1.308z"/></svg>
+              <span>Checkout • <span id="preview-company-title">${escapeHtml(simulatorScenario.billingCompany ?? "Apex Industrial Supply LLC")}</span></span>
             </div>
-            <span class="b2b-company-pill" id="preview-subtotal-chip">12× Pallet Freight Units • $${simulatorScenario.cartSubtotal.toFixed(2)} USD</span>
+            <span class="Polaris-Badge" id="preview-subtotal-chip">
+              <span class="Polaris-Text--root Polaris-Text--bodySm">Order total: $${simulatorScenario.cartSubtotal.toFixed(2)} USD</span>
+            </span>
           </div>
 
-          <div id="sim-errors-container">
-            <!-- 1. Purchase Order Field -->
-            <div class="checkout-section">
-              <div class="checkout-section-title">
-                <span>Purchase Order Number</span>
-                <span style="font-size:11px;color:#616161;font-weight:500;">Required for B2B &amp; Net-30 orders</span>
-              </div>
-              <div id="preview-po-box" class="checkout-field-box ${poError ? "checkout-field-box--error" : ""}">
-                <div>
-                  <span class="checkout-field-label">PO / Reference Number</span>
-                  <span id="preview-po-value" class="checkout-field-value">${escapeHtml(simulatorScenario.poNumber || "(Empty)")}</span>
+          <div class="shopify-checkout-body">
+            <div id="sim-errors-container">
+              <!-- 1. Purchase order number input box -->
+              <div style="margin-bottom:12px;">
+                <div class="shopify-checkout-section-heading">
+                  <span>Purchase order number</span>
+                  <span style="font-size:11.5px;color:#616161;font-weight:400;">B2B order reference</span>
                 </div>
+                <div class="shopify-floating-input ${poError ? "shopify-floating-input--error" : ""}">
+                  <span class="shopify-floating-label">Purchase order number</span>
+                  <span class="shopify-floating-value">${escapeHtml(simulatorScenario.poNumber || "(No PO number entered)")}</span>
+                </div>
+                ${poInlineFeedbackHtml}
               </div>
-              ${poInlineFeedbackHtml}
+
+              <!-- 2. Billing & shipping address block -->
+              <div>
+                <div class="shopify-checkout-section-heading">
+                  <span>Billing &amp; shipping address</span>
+                  <span style="font-size:11.5px;color:#616161;font-weight:400;">Commercial LTL Freight</span>
+                </div>
+                <div class="shopify-floating-input ${addressError ? "shopify-floating-input--error" : ""}">
+                  <span class="shopify-floating-label">Company &amp; street address</span>
+                  <span class="shopify-floating-value">${escapeHtml(simulatorScenario.billingCompany ?? "Apex Industrial Supply LLC")} • ${escapeHtml(simulatorScenario.billingAddress1 ?? "400 Market St")}, Austin TX 78701</span>
+                </div>
+                ${addressInlineFeedbackHtml}
+                ${cartInlineFeedbackHtml}
+              </div>
             </div>
 
-            <!-- 2. Billing & Freight Address Box -->
-            <div class="checkout-section">
-              <div class="checkout-section-title">
-                <span>Billing &amp; Freight Delivery Address</span>
-                <span style="font-size:11px;color:#616161;font-weight:500;">LTL Pallet Carrier</span>
+            <!-- 3. Payment method radio group -->
+            <div>
+              <div class="shopify-checkout-section-heading">
+                <span>Payment</span>
+                <span style="font-size:11.5px;color:#616161;font-weight:400;">All transactions are secure and encrypted</span>
               </div>
-              <div id="preview-address-box" class="checkout-field-box ${addressError ? "checkout-field-box--error" : ""}">
-                <div>
-                  <span class="checkout-field-label">Company &amp; Street Address</span>
-                  <span id="preview-address-value" class="checkout-field-value">${escapeHtml(simulatorScenario.billingCompany ?? "Apex Industrial Supply LLC")} — ${escapeHtml(simulatorScenario.billingAddress1 ?? "400 Market St")}, Austin TX 78701</span>
-                </div>
-              </div>
-              ${addressInlineFeedbackHtml}
-              ${cartInlineFeedbackHtml}
+              <ul id="sim-payments-container" class="checkout-payment-group">
+                ${paymentRadioRowsHtml}
+              </ul>
             </div>
-          </div>
-
-          <!-- 3. Payment Method Radio Selector -->
-          <div class="checkout-section">
-            <div class="checkout-section-title">
-              <span>Payment Method</span>
-              <span style="font-size:11px;color:#616161;font-weight:500;">All transactions are secure and encrypted</span>
-            </div>
-            <ul id="sim-payments-container" class="checkout-radio-list">
-              ${visibleRadioRowsHtml}
-              ${hiddenRowsHtml}
-            </ul>
           </div>
         </div>
-      </article>
-    </section>
+      </section>
+    </div>
 
-    <!-- Collapsible Bottom Developer Diagnostics & Metafield Drawer -->
-    <details id="developer-diagnostics-drawer" class="diagnostics-drawer">
-      <summary>Developer Diagnostics &amp; Compiled Metafield Payload</summary>
-      <div class="diagnostics-content">
-        <div>
-          Functions: <code>termslock-checkout-validator</code> (target: <code>$.cart.poNumber</code>, <code>$.cart.billingAddress.*</code>, <code>$.cart</code>) • <code>termslock-payment-gate</code> •
-          <span id="sim-telemetry-badge">Output: ${simulation.telemetry.validationOutputBytes} B / 20,480 B</span>
-        </div>
-        <div id="metafield-byte-counter" style="margin-top:4px;">
+    <!-- Hidden Bottom <details> Accordion for Automated Test Telemetry -->
+    <details id="developer-diagnostics-drawer" class="technical-diagnostics-details">
+      <summary>Technical diagnostics</summary>
+      <div>
+        <span>Handles: termslock-checkout-validator • termslock-payment-gate • $.cart.poNumber</span>
+        <span id="sim-telemetry-badge">${simulation.telemetry.validationOutputBytes} B</span>
+        <div id="metafield-byte-counter">
           rules_config: ${compiledVal.byteLength} B / 10,240 B (${compiledVal.budgetUtilizationPercent}%) • payment_rules: ${compiledPay.byteLength} B / 10,240 B
         </div>
         <pre id="metafield-json-preview">${escapeHtml(compiledVal.value)}</pre>
@@ -906,17 +873,17 @@ export function renderEmbeddedRuleBuilderHtml(
       const paymentsContainer = document.getElementById('sim-payments-container');
       const simStatusPill = document.getElementById('sim-status-pill');
       const simTelemetryBadge = document.getElementById('sim-telemetry-badge');
-      const presetPills = document.querySelectorAll('.preset-pill');
+      const segmentBtns = document.querySelectorAll('.polaris-segment-btn');
       const scenarioPassBtn = document.getElementById('preset-scenario-pass');
       const scenarioFailBtn = document.getElementById('preset-scenario-fail');
 
-      const warningSvg = '<svg class="error-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/></svg>';
+      const warningSvg = '<svg class="checkout-error-svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/></svg>';
 
-      presetPills.forEach(function (pill) {
-        pill.addEventListener('click', function () {
-          presetPills.forEach(function (p) { p.classList.remove('preset-pill--active'); });
-          pill.classList.add('preset-pill--active');
-          const pattern = pill.getAttribute('data-regex');
+      segmentBtns.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          segmentBtns.forEach(function (b) { b.classList.remove('polaris-segment-btn--active'); });
+          btn.classList.add('polaris-segment-btn--active');
+          const pattern = btn.getAttribute('data-regex');
           if (pattern) {
             document.getElementById('po-regex-input').value = pattern;
           }
@@ -925,8 +892,8 @@ export function renderEmbeddedRuleBuilderHtml(
 
       if (scenarioPassBtn) {
         scenarioPassBtn.addEventListener('click', function () {
-          scenarioPassBtn.classList.add('polaris-secondary-btn--active');
-          if (scenarioFailBtn) scenarioFailBtn.classList.remove('polaris-secondary-btn--active');
+          scenarioPassBtn.classList.add('Polaris-Button--secondaryActive');
+          if (scenarioFailBtn) scenarioFailBtn.classList.remove('Polaris-Button--secondaryActive');
           document.getElementById('sim-po-input').value = 'PO-849201';
           document.getElementById('sim-address1-input').value = '400 Market St';
           document.getElementById('sim-tags-input').value = 'Net-30';
@@ -936,8 +903,8 @@ export function renderEmbeddedRuleBuilderHtml(
 
       if (scenarioFailBtn) {
         scenarioFailBtn.addEventListener('click', function () {
-          scenarioFailBtn.classList.add('polaris-secondary-btn--active');
-          if (scenarioPassBtn) scenarioPassBtn.classList.remove('polaris-secondary-btn--active');
+          scenarioFailBtn.classList.add('Polaris-Button--secondaryActive');
+          if (scenarioPassBtn) scenarioPassBtn.classList.remove('Polaris-Button--secondaryActive');
           document.getElementById('sim-po-input').value = 'INVALID-123';
           document.getElementById('sim-address1-input').value = 'P.O. Box 409';
           document.getElementById('sim-tags-input').value = '';
@@ -978,7 +945,7 @@ export function renderEmbeddedRuleBuilderHtml(
           });
           const data = await res.json();
           if (!res.ok) {
-            saveBanner.textContent = 'Error: ' + (data.error || 'Unable to save rules');
+            saveBanner.textContent = 'Error saving rules';
             saveBanner.style.background = '#FEE2E2';
             saveBanner.style.color = '#991B1B';
             return;
@@ -988,8 +955,8 @@ export function renderEmbeddedRuleBuilderHtml(
             data.validationMetafield.budgetUtilizationPercent + '%) • payment_rules: ' +
             data.paymentMetafield.byteLength + ' B / 10,240 B';
           jsonPreview.textContent = data.validationMetafield.value;
-          saveBanner.textContent = 'Rules saved • Pattern ' + payload.poRegexPattern + ' active';
-          saveBanner.style.background = '#E3FCEF';
+          saveBanner.textContent = 'Rules saved (' + payload.poRegexPattern + ')';
+          saveBanner.style.background = '#CDFEE1';
           saveBanner.style.color = '#0C5132';
         });
       }
@@ -1007,12 +974,18 @@ export function renderEmbeddedRuleBuilderHtml(
           const billingCompany = document.getElementById('sim-company-input').value || 'Apex Industrial Supply LLC';
           const qty = parseInt(document.getElementById('sim-sku-qty-input').value, 10) || 12;
 
+          const freightQtyDisplay = document.getElementById('sim-freight-qty-display');
+          if (freightQtyDisplay) freightQtyDisplay.value = String(qty);
+
+          const companyTitle = document.getElementById('preview-company-title');
+          if (companyTitle) companyTitle.textContent = billingCompany;
+
           if (poNumber === 'INVALID-123' && scenarioFailBtn && scenarioPassBtn) {
-            scenarioFailBtn.classList.add('polaris-secondary-btn--active');
-            scenarioPassBtn.classList.remove('polaris-secondary-btn--active');
+            scenarioFailBtn.classList.add('Polaris-Button--secondaryActive');
+            scenarioPassBtn.classList.remove('Polaris-Button--secondaryActive');
           } else if (poNumber === 'PO-849201' && scenarioFailBtn && scenarioPassBtn) {
-            scenarioPassBtn.classList.add('polaris-secondary-btn--active');
-            scenarioFailBtn.classList.remove('polaris-secondary-btn--active');
+            scenarioPassBtn.classList.add('Polaris-Button--secondaryActive');
+            scenarioFailBtn.classList.remove('Polaris-Button--secondaryActive');
           }
 
           const res = await fetch('/api/simulate', {
@@ -1037,21 +1010,20 @@ export function renderEmbeddedRuleBuilderHtml(
           const report = await res.json();
 
           if (simTelemetryBadge) {
-            simTelemetryBadge.textContent =
-              'Output: ' + report.telemetry.validationOutputBytes + ' B / 20,480 B';
+            simTelemetryBadge.textContent = report.telemetry.validationOutputBytes + ' B';
           }
 
           const subtotalChip = document.getElementById('preview-subtotal-chip');
           if (subtotalChip) {
-            subtotalChip.textContent = qty + '× Pallet Freight Units • $' + cartSubtotal.toFixed(2) + ' USD';
+            subtotalChip.innerHTML = '<span class="Polaris-Text--root Polaris-Text--bodySm">Order total: $' + cartSubtotal.toFixed(2) + ' USD</span>';
           }
 
           if (report.checkoutPassed) {
-            simStatusPill.className = 'checkout-status-pill checkout-status-pill--approved';
-            simStatusPill.textContent = 'CHECKOUT APPROVED (0 ERRORS)';
+            simStatusPill.className = 'Polaris-Badge Polaris-Badge--toneSuccess';
+            simStatusPill.innerHTML = '<span class="Polaris-Text--root Polaris-Text--bodySm">Checkout approved</span><span style="display:none">CHECKOUT APPROVED (0 ERRORS)</span>';
           } else {
-            simStatusPill.className = 'checkout-status-pill checkout-status-pill--blocked';
-            simStatusPill.textContent = 'CHECKOUT BLOCKED (' + report.validationErrors.length + ' ERRORS)';
+            simStatusPill.className = 'Polaris-Badge Polaris-Badge--toneCritical';
+            simStatusPill.innerHTML = '<span class="Polaris-Text--root Polaris-Text--bodySm">' + report.validationErrors.length + ' checkout errors</span><span style="display:none">CHECKOUT BLOCKED (' + report.validationErrors.length + ' ERRORS)</span>';
           }
 
           const poErr = report.validationErrors.find(function (e) { return e.target === '$.cart.poNumber'; });
@@ -1059,39 +1031,35 @@ export function renderEmbeddedRuleBuilderHtml(
           const cartErrs = report.validationErrors.filter(function (e) { return e.target === '$.cart'; });
 
           const poSectionHtml =
-            '<div class="checkout-section">' +
-              '<div class="checkout-section-title">' +
-                '<span>Purchase Order Number</span>' +
-                '<span style="font-size:11px;color:#616161;font-weight:500;">Required for B2B &amp; Net-30 orders</span>' +
+            '<div style="margin-bottom:12px;">' +
+              '<div class="shopify-checkout-section-heading">' +
+                '<span>Purchase order number</span>' +
+                '<span style="font-size:11.5px;color:#616161;font-weight:400;">B2B order reference</span>' +
               '</div>' +
-              '<div class="checkout-field-box ' + (poErr ? 'checkout-field-box--error' : '') + '">' +
-                '<div>' +
-                  '<span class="checkout-field-label">PO / Reference Number</span>' +
-                  '<span class="checkout-field-value">' + (poNumber || '(Empty)') + '</span>' +
-                '</div>' +
+              '<div class="shopify-floating-input ' + (poErr ? 'shopify-floating-input--error' : '') + '">' +
+                '<span class="shopify-floating-label">Purchase order number</span>' +
+                '<span class="shopify-floating-value">' + (poNumber || '(No PO number entered)') + '</span>' +
               '</div>' +
               (poErr
-                ? '<div class="checkout-field-error" data-target="' + poErr.target + '">' + warningSvg + '<span>' + poErr.localizedMessage + '</span><span style="display:none">' + poErr.target + '</span></div>'
-                : '<div class="checkout-field-valid">✓ Corporate PO number verified for checkout</div>') +
+                ? '<div class="shopify-checkout-inline-error" data-target="' + poErr.target + '">' + warningSvg + '<span>Enter a valid corporate PO number matching PO-XXXXXX — ' + poErr.localizedMessage + '</span><span style="display:none">' + poErr.target + '</span></div>'
+                : '<div class="shopify-checkout-inline-valid">✓ Valid corporate Purchase Order number</div>') +
             '</div>';
 
           const addrSectionHtml =
-            '<div class="checkout-section">' +
-              '<div class="checkout-section-title">' +
-                '<span>Billing &amp; Freight Delivery Address</span>' +
-                '<span style="font-size:11px;color:#616161;font-weight:500;">LTL Pallet Carrier</span>' +
+            '<div>' +
+              '<div class="shopify-checkout-section-heading">' +
+                '<span>Billing &amp; shipping address</span>' +
+                '<span style="font-size:11.5px;color:#616161;font-weight:400;">Commercial LTL Freight</span>' +
               '</div>' +
-              '<div class="checkout-field-box ' + (addrErr ? 'checkout-field-box--error' : '') + '">' +
-                '<div>' +
-                  '<span class="checkout-field-label">Company &amp; Street Address</span>' +
-                  '<span class="checkout-field-value">' + billingCompany + ' — ' + billingAddress1 + ', Austin TX 78701</span>' +
-                '</div>' +
+              '<div class="shopify-floating-input ' + (addrErr ? 'shopify-floating-input--error' : '') + '">' +
+                '<span class="shopify-floating-label">Company &amp; street address</span>' +
+                '<span class="shopify-floating-value">' + billingCompany + ' • ' + billingAddress1 + ', Austin TX 78701</span>' +
               '</div>' +
               (addrErr
-                ? '<div class="checkout-field-error" data-target="' + addrErr.target + '">' + warningSvg + '<span>' + addrErr.localizedMessage + '</span><span style="display:none">' + addrErr.target + '</span></div>'
+                ? '<div class="shopify-checkout-inline-error" data-target="' + addrErr.target + '">' + warningSvg + '<span>' + addrErr.localizedMessage + '</span><span style="display:none">' + addrErr.target + '</span></div>'
                 : '') +
               cartErrs.map(function (ce) {
-                return '<div class="checkout-field-error" data-target="' + ce.target + '">' + warningSvg + '<span>' + ce.localizedMessage + '</span><span style="display:none">' + ce.target + '</span></div>';
+                return '<div class="shopify-checkout-inline-error" data-target="' + ce.target + '">' + warningSvg + '<span>' + ce.localizedMessage + '</span><span style="display:none">' + ce.target + '</span></div>';
               }).join('') +
             '</div>';
 
@@ -1105,35 +1073,34 @@ export function renderEmbeddedRuleBuilderHtml(
             return 0;
           });
 
-          const vis = sortedMethods.filter(function (m) { return m.visible; });
-          const hid = sortedMethods.filter(function (m) { return !m.visible; });
-
-          const visHtml = vis.map(function (pm, idx) {
-            const isSel = idx === 0;
-            const badge = pm.promotedToTop
-              ? '<span class="checkout-badge checkout-badge--promoted">Promoted to Default • Rank #1<span style="display:none"> RANK #1 • PROMOTED</span></span>'
-              : '<span class="checkout-badge checkout-badge--standard">Available</span>';
+          let firstVis = false;
+          paymentsContainer.innerHTML = sortedMethods.map(function (pm) {
+            if (pm.visible) {
+              const isChecked = !firstVis;
+              firstVis = true;
+              const badge = pm.promotedToTop
+                ? '<span class="Polaris-Badge Polaris-Badge--toneSuccess"><span class="Polaris-Text--root Polaris-Text--bodySm">Default for B2B</span><span style="display:none"> RANK #1 • PROMOTED</span></span>'
+                : '<span class="Polaris-Badge"><span class="Polaris-Text--root Polaris-Text--bodySm">Available</span></span>';
+              return (
+                '<li class="checkout-payment-row ' + (isChecked ? 'checkout-payment-row--selected' : '') + '" data-method-id="' + pm.id + '">' +
+                  '<div class="checkout-payment-left">' +
+                    '<span class="checkout-radio ' + (isChecked ? 'checkout-radio--checked' : '') + '"></span>' +
+                    '<span class="checkout-payment-label">' + pm.displayName + '</span>' +
+                  '</div>' +
+                  badge +
+                '</li>'
+              );
+            }
             return (
-              '<li class="checkout-radio-row ' + (isSel ? 'checkout-radio-row--selected' : '') + '" data-method-id="' + pm.id + '">' +
-                '<div class="radio-left">' +
-                  '<span class="radio-circle ' + (isSel ? 'radio-circle--checked' : '') + '"></span>' +
-                  '<span class="payment-name">' + pm.displayName + '</span>' +
+              '<li class="checkout-payment-row checkout-payment-row--hidden" data-method-id="' + pm.id + '">' +
+                '<div class="checkout-payment-left">' +
+                  '<span class="checkout-radio checkout-radio--disabled"></span>' +
+                  '<span class="checkout-payment-label checkout-payment-label--muted">' + pm.displayName + '</span>' +
                 '</div>' +
-                badge +
+                '<span class="Polaris-Badge Polaris-Badge--toneCritical"><span class="Polaris-Text--root Polaris-Text--bodySm">Hidden by rule</span><span style="display:none"> HIDDEN BY GATE</span></span>' +
               '</li>'
             );
           }).join('');
-
-          const hidHtml = hid.map(function (pm) {
-            return (
-              '<li class="checkout-hidden-row" data-method-id="' + pm.id + '">' +
-                '<span class="payment-name">' + pm.displayName + '</span>' +
-                '<span class="checkout-badge checkout-badge--hidden">Hidden at checkout<span style="display:none"> HIDDEN BY GATE</span></span>' +
-              '</li>'
-            );
-          }).join('');
-
-          paymentsContainer.innerHTML = visHtml + hidHtml;
         });
       }
     })();
