@@ -34,6 +34,12 @@ All agents and contributors modifying this repository must strictly enforce the 
    - Never invoke interactive `shopify app dev` or `shopify auth login` prompts during automated build/test pipelines.
    - All Function logic, Admin GraphQL compilers, Billing API gates, and Checkout Simulator pipelines must be testable offline via `npm test` (Vitest) and `npm run typecheck` (`tsc --noEmit`).
 
+4. **App Store Submission & Security Invariants:**
+   - **Zero Trademark Leakage in URLs:** Never include `"shopify"` or `"example"` in `application_url`, `redirect_urls`, `privacy_policy_url`, `demo_url`, or repository URLs.
+   - **App Icon Size & Format:** `docs/shopify-store/screenshots/app-icon-1200x1200.png` must remain a flat-vector `1200x1200` 24-bit RGB PNG (`color_type = 2`) under **`50 KB`** with zero text and zero trademarks so Dev Dashboard syncs it to the Partner Listing.
+   - **Preview Layout Stability:** Maintain `min-height: 420px; box-sizing: border-box;` on `.tl-storefront-checkout` and `min-height: 580px;` on `.tl-card--preview` so toggling simulation states never jumps or stretches the page layout.
+   - **Embedded Security Hardening:** Enforce `/^[a-z0-9][a-z0-9-]*\.myshopify\.com$/` on all shop domains, derive live shop context from the HMAC-verified App Bridge JWT `dest` claim, and return `Content-Security-Policy: frame-ancestors` on `GET /`.
+
 ---
 
 ## 2. Repository Structure
@@ -56,6 +62,7 @@ All agents and contributors modifying this repository must strictly enforce the 
 │       ├── PRIVACY_AND_GDPR.md
 │       ├── FAQ.md
 │       ├── SHOPIFY_LISTING_COPY.md
+│       ├── SHOPIFY_MARKETPLACE_SUBMISSION_PLAYBOOK.md
 │       └── screenshots/
 │           ├── app-icon-1200x1200.png
 │           ├── 01-b2b-po-number-checkout-validation.png
@@ -104,4 +111,5 @@ All agents and contributors modifying this repository must strictly enforce the 
 
 - [ ] `npm run typecheck` exits with `0` errors across `extensions/`, `web/`, and `tests/`.
 - [ ] `npm test` runs 20+ deterministic unit and integration tests covering all 4 validation gates, payment customization rules, `<10 KB` metafield budget enforcement, `<20 KB` output enforcement, `<30` GraphQL query complexity check, and Shopify Billing API plan gating.
-- [ ] All App Store images in `docs/shopify-store/screenshots/` are verified 24-bit RGB PNGs (`color_type = 2`, no alpha channel) at exact dimensions (`1200x1200` and `1600x900`).
+- [ ] All App Store images in `docs/shopify-store/screenshots/` are verified 24-bit RGB PNGs (`color_type = 2`, no alpha channel) at exact dimensions (`1200x1200` and `1600x900`), with `app-icon-1200x1200.png` under `50 KB`.
+- [ ] `@shopify/cli@latest app security review` reports `0 findings in 36 checks` and `/shopify-app-store-review` reports `0` failing requirements.
