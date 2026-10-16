@@ -11,41 +11,36 @@ async function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function showBanner(page, stepNum, totalSteps, title, description) {
-  await page.evaluate(({ stepNum, totalSteps, title, description }) => {
-    let overlay = document.getElementById("screencast-caption-overlay");
-    if (!overlay) {
-      overlay = document.createElement("div");
-      overlay.id = "screencast-caption-overlay";
-      overlay.style.position = "fixed";
-      overlay.style.bottom = "24px";
-      overlay.style.left = "50%";
-      overlay.style.transform = "translateX(-50%)";
-      overlay.style.zIndex = "999999";
-      overlay.style.backgroundColor = "rgba(26, 26, 26, 0.94)";
-      overlay.style.color = "#FFFFFF";
-      overlay.style.padding = "14px 28px";
-      overlay.style.borderRadius = "12px";
-      overlay.style.boxShadow = "0 8px 32px rgba(0,0,0,0.35)";
-      overlay.style.fontFamily = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
-      overlay.style.maxWidth = "800px";
-      overlay.style.width = "90%";
-      overlay.style.transition = "all 0.3s ease";
-      overlay.style.border = "1px solid rgba(255,255,255,0.15)";
-      overlay.style.backdropFilter = "blur(8px)";
-      document.body.appendChild(overlay);
-    }
-    overlay.innerHTML = `
-      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
-        <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #008060; background: #E3F1DF; padding: 2px 8px; borderRadius: 4px;">Step ${stepNum} of ${totalSteps}</span>
-        <span style="font-size: 12px; color: #999999;">TermsLock B2B Governance</span>
-      </div>
-      <div style="font-size: 16px; font-weight: 700; color: #FFFFFF; margin-bottom: 4px;">${title}</div>
-      <div style="font-size: 13px; color: #CCCCCC; line-height: 1.4;">${description}</div>
-    `;
-    overlay.style.opacity = "1";
-  }, { stepNum, totalSteps, title, description });
-  await sleep(600);
+/**
+ * Perform a silky-smooth, fluid ease-in-out scroll in the page
+ * captured frame-by-frame by Playwright's video recorder.
+ */
+async function smoothScrollTo(page, targetY, durationMs = 1400) {
+  await page.evaluate(async ({ targetY, durationMs }) => {
+    const startY = window.scrollY;
+    const diff = targetY - startY;
+    const startTime = performance.now();
+    return new Promise((resolve) => {
+      function step(now) {
+        const elapsed = now - startTime;
+        const progress = Math.min(elapsed / durationMs, 1);
+        // quadratic ease-in-out
+        const ease =
+          progress < 0.5
+            ? 2 * progress * progress
+            : -1 + (4 - 2 * progress) * progress;
+        window.scrollTo(0, startY + diff * ease);
+        if (progress < 1) {
+          requestAnimationFrame(step);
+        } else {
+          window.scrollTo(0, targetY);
+          resolve();
+        }
+      }
+      requestAnimationFrame(step);
+    });
+  }, { targetY, durationMs });
+  await sleep(400);
 }
 
 async function recordExtendedScreencast() {
@@ -71,39 +66,33 @@ async function recordExtendedScreencast() {
   const page = await context.newPage();
   console.log("[Screencast] Navigating to http://localhost:3456/ ...");
   await page.goto("http://localhost:3456/", { waitUntil: "networkidle" });
-  await sleep(1500);
-
-  // SCENE 1: Introduction & App Overview
-  await showBanner(
-    page,
-    1,
-    6,
-    "Welcome to TermsLock: B2B PO, Tax & Net-30 Governance",
-    "TermsLock enforces strict B2B purchase order rules, Wholesale MOQs, and Net-30 payment method restrictions via deterministic Shopify Functions."
-  );
-  await sleep(6000);
-
-  // SCENE 2: Merchant Configuration & Dynamic Rule Updates
-  await showBanner(
-    page,
-    2,
-    6,
-    "Merchant Configuration: Setting PO Regex & Wholesale MOQ",
-    "Selecting the Corporate PO preset (^PO-[0-9]{6}$), setting a $1,000 threshold, and enforcing a $500 Wholesale Minimum Order Quantity."
-  );
   await sleep(2500);
 
+  // PHASE 1: Top Dashboard View (PO Validation configuration)
+  console.log("[Screencast] Phase 1: Configuring PO rules at scroll top...");
   const corporateBtn = page.locator("#preset-po-corporate");
   if (await corporateBtn.isVisible()) {
     await corporateBtn.click();
-    await sleep(2000);
+    await sleep(1500);
   }
 
   const thresholdInput = page.locator("#po-threshold-input");
   if (await thresholdInput.isVisible()) {
     await thresholdInput.fill("1000");
-    await sleep(2000);
+    await sleep(1500);
   }
+
+  const saveBtn = page.locator("#save-rules-btn");
+  if (await saveBtn.isVisible()) {
+    await saveBtn.click();
+    console.log("[Screencast] Clicked Save rules.");
+    await sleep(3000);
+  }
+
+  // PHASE 2: Smooth scroll down to Wholesale MOQ & Payment Customization
+  console.log("[Screencast] Phase 2: Smooth scrolling down to Wholesale & Freight Protection...");
+  await smoothScrollTo(page, 240, 1600);
+  await sleep(2500);
 
   const moqInput = page.locator("#moq-subtotal-input");
   if (await moqInput.isVisible()) {
@@ -111,110 +100,79 @@ async function recordExtendedScreencast() {
     await sleep(2000);
   }
 
-  // Scroll smoothly to Payment Customization section
-  await page.evaluate(() => window.scrollTo({ top: 280, behavior: "smooth" }));
+  // PHASE 3: Smooth scroll to center Checkout Preview perfectly on screen
+  console.log("[Screencast] Phase 3: Smooth scrolling to center Checkout Preview card...");
+  await smoothScrollTo(page, 440, 1600);
   await sleep(2000);
 
-  // Save rules to App Metafields
-  const saveBtn = page.locator("#save-rules-btn");
-  if (await saveBtn.isVisible()) {
-    await saveBtn.click();
-    console.log("[Screencast] Clicked Save rules.");
-    await sleep(4000);
-  }
-
-  // SCENE 3: Scenario A - Approved B2B Wholesale Buyer Checkout
-  await showBanner(
-    page,
-    3,
-    6,
-    "Customer Checkout Simulation: Approved Net-30 Buyer",
-    "Testing a verified B2B wholesale customer with corporate PO (PO-849201), $1,450 cart subtotal, and b2b-net30 account tag."
-  );
-  await sleep(2500);
-
-  await page.evaluate(() => window.scrollTo({ top: 320, behavior: "smooth" }));
-  await sleep(1500);
-
+  // Test Approved Net-30 Scenario
+  console.log("[Screencast] Testing Approved Net-30 Scenario...");
   const passBtn = page.locator("#preset-scenario-pass");
   if (await passBtn.isVisible()) {
     await passBtn.click();
-    await sleep(8000);
+    await sleep(4000);
   }
 
-  // SCENE 4: Scenario B - Blocked Invalid PO & Residential Address
-  await showBanner(
-    page,
-    4,
-    6,
-    "Customer Checkout Simulation: Blocked Invalid Buyer",
-    "Testing an unverified buyer submitting an invalid PO format (INVALID-123) and a restricted residential PO Box address (P.O. Box 409)."
-  );
-  await sleep(2500);
-
+  // Test Blocked PO & Address Scenario
+  console.log("[Screencast] Testing Blocked PO & Address Scenario...");
   const failBtn = page.locator("#preset-scenario-fail");
   if (await failBtn.isVisible()) {
     await failBtn.click();
-    await sleep(8000);
+    await sleep(4000);
   }
 
-  // SCENE 5: Interactive Buyer Drawer & Wholesale MOQ Enforcement
-  await showBanner(
-    page,
-    5,
-    6,
-    "Custom Buyer Drawer: Live Wholesale MOQ & Case-Pack Rules",
-    "Opening the live test drawer to inspect custom cart payloads, subtotal validation, and freight case-pack constraints in real time."
-  );
-  await sleep(2000);
-
-  const drawer = page.locator("#test-buyer-drawer summary");
-  if (await drawer.isVisible()) {
-    await drawer.click();
+  // Toggle back to Approved Net-30 smoothly
+  console.log("[Screencast] Switching back to Approved Net-30...");
+  if (await passBtn.isVisible()) {
+    await passBtn.click();
     await sleep(3000);
   }
 
-  // Scroll down to see full drawer inputs
-  await page.evaluate(() => window.scrollTo({ top: 500, behavior: "smooth" }));
-  await sleep(4000);
-
-  // Modify cart subtotal to $350 (below $500 MOQ) to demonstrate real-time block
-  const simSubtotalInput = page.locator("#sim-subtotal");
-  if (await simSubtotalInput.isVisible()) {
-    await simSubtotalInput.fill("350");
-    await sleep(1500);
-    const runSimBtn = page.locator("#run-simulation-btn");
-    if (await runSimBtn.isVisible()) {
-      await runSimBtn.click();
-      console.log("[Screencast] Ran custom simulation under MOQ.");
-      await sleep(6000);
-    }
-  }
-
-  // Restore winning state with valid $1,250 subtotal
-  if (await simSubtotalInput.isVisible()) {
-    await simSubtotalInput.fill("1250");
-    await sleep(1500);
-    const runSimBtn = page.locator("#run-simulation-btn");
-    if (await runSimBtn.isVisible()) {
-      await runSimBtn.click();
-      await sleep(6000);
-    }
-  }
-
-  // SCENE 6: Production Verification & Zero-Latency Execution
-  await showBanner(
-    page,
-    6,
-    6,
-    "100% Deterministic Wasm Execution (Shopify Functions)",
-    "Checkout rules execute inside Shopify's isolated Wasm sandbox under 5ms CPU budget with zero external network requests."
-  );
+  // PHASE 4: Smooth scroll down to Customize Test Buyer Inputs Drawer
+  console.log("[Screencast] Phase 4: Smooth scrolling to Test Buyer Drawer...");
+  await smoothScrollTo(page, 620, 1600);
   await sleep(2000);
 
-  // Scroll back to top
-  await page.evaluate(() => window.scrollTo({ top: 0, behavior: "smooth" }));
-  await sleep(6000);
+  const drawerSummary = page.locator("#test-buyer-drawer summary");
+  if (await drawerSummary.isVisible()) {
+    await drawerSummary.click();
+    console.log("[Screencast] Expanded custom test buyer inputs drawer.");
+    await sleep(2500);
+  }
+
+  // Smooth scroll a bit further so drawer inputs are fully in view
+  await smoothScrollTo(page, 720, 1400);
+  await sleep(2000);
+
+  // Change subtotal to $350 (below $500 MOQ)
+  const simSubtotal = page.locator("#sim-subtotal");
+  if (await simSubtotal.isVisible()) {
+    await simSubtotal.fill("350");
+    await sleep(1500);
+    const runSimBtn = page.locator("#run-simulation-btn");
+    if (await runSimBtn.isVisible()) {
+      await runSimBtn.click();
+      console.log("[Screencast] Ran custom simulation under MOQ ($350).");
+      await sleep(4000);
+    }
+  }
+
+  // Restore subtotal to $1,450 (passing)
+  if (await simSubtotal.isVisible()) {
+    await simSubtotal.fill("1450");
+    await sleep(1500);
+    const runSimBtn = page.locator("#run-simulation-btn");
+    if (await runSimBtn.isVisible()) {
+      await runSimBtn.click();
+      console.log("[Screencast] Restored valid subtotal ($1,450).");
+      await sleep(4000);
+    }
+  }
+
+  // PHASE 5: Smooth scroll all the way back to top
+  console.log("[Screencast] Phase 5: Smooth scrolling back to dashboard top...");
+  await smoothScrollTo(page, 0, 2000);
+  await sleep(4000);
 
   console.log("[Screencast] Finalizing video recording...");
   await page.close();

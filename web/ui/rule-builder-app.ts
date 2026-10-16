@@ -689,6 +689,8 @@ export function renderEmbeddedRuleBuilderHtml(
     }
     .tl-card--preview {
       margin-bottom: 0;
+      min-height: 580px;
+      box-sizing: border-box;
     }
     .tl-test-customer-drawer {
       background: #F9FAFB;
@@ -1153,6 +1155,8 @@ export function renderEmbeddedRuleBuilderHtml(
       padding: 16px 18px;
       background: #FFFFFF;
       margin-bottom: 16px;
+      min-height: 420px;
+      box-sizing: border-box;
     }
     .tl-checkout-header {
       display: flex;
