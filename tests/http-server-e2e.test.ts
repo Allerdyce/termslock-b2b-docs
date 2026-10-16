@@ -346,4 +346,34 @@ describe("Phase P4 (QA Gate 5): End-to-End HTTP Server + Wasm Neutral Bundle Int
     expect(appToml).toContain("embedded = false");
     expect(appToml).toContain("/api/auth/callback");
   });
+
+  it("42. GET /polaris.css serves embedded Polaris stylesheet with Cache-Control headers", async () => {
+    const res = await fetch(`${baseUrl}/polaris.css`);
+    expect(res.status).toBe(200);
+    expect(res.headers.get("content-type")).toContain("text/css");
+    expect(res.headers.get("cache-control")).toContain("public");
+    const css = await res.text();
+    expect(css.length).toBeGreaterThan(100_000);
+    expect(css).toContain(".Polaris-Button");
+
+    const headRes = await fetch(`${baseUrl}/polaris.css`, { method: "HEAD" });
+    expect(headRes.status).toBe(200);
+    expect(headRes.headers.get("content-type")).toContain("text/css");
+  });
+
+  it("43. GET /app.bundle.js serves embedded client hydration script with Cache-Control headers", async () => {
+    const res = await fetch(`${baseUrl}/app.bundle.js`);
+    expect(res.status).toBe(200);
+    expect(res.headers.get("content-type")).toContain("application/javascript");
+    expect(res.headers.get("cache-control")).toContain("public");
+    const js = await res.text();
+    expect(js.length).toBeGreaterThan(10_000);
+    expect(js).toContain("save-rules-btn");
+    expect(js).toContain("run-simulator-btn");
+
+    const headRes = await fetch(`${baseUrl}/app.bundle.js`, { method: "HEAD" });
+    expect(headRes.status).toBe(200);
+    expect(headRes.headers.get("content-type")).toContain("application/javascript");
+  });
 });
+

@@ -1,0 +1,15 @@
+#:schema node_modules/wrangler/config-schema.json
+name = "termslock-shopify"
+main = "src/worker.ts"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+# Public build-time environment variables
+[vars]
+SHOPIFY_API_KEY = "termslock_mock_client_id_2026"
+SCOPES = "read_orders,write_checkouts,read_customer_payment_methods"
+DEFAULT_WEBHOOK_SECRET = "shpss_termslock_2026_10_secret"
+
+# To set production secrets:
+# npx wrangler secret put SHOPIFY_API_SECRET
+# npx wrangler secret put SHOPIFY_API_KEY

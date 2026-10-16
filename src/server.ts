@@ -35,6 +35,11 @@ import {
   type BillingPlanTier
 } from "../web/billing/shopify-billing.ts";
 
+import {
+  POLARIS_CSS,
+  APP_BUNDLE_JS
+} from "./assets/embedded-assets.ts";
+
 export const DEFAULT_PORT = 3456;
 export const DEFAULT_WEBHOOK_SECRET =
   process.env.SHOPIFY_API_SECRET ?? "shpss_termslock_2026_10_secret";
@@ -102,14 +107,16 @@ export function createTermsLockServer(
       const url = new URL(req.url ?? "/", "http://localhost");
       const pathname = url.pathname;
 
-      // 0. GET /polaris.css -> Official @shopify/polaris stylesheet from node_modules
+      // 0a. GET /polaris.css -> Official @shopify/polaris stylesheet (embedded memory asset with disk fallback)
       if ((method === "GET" || method === "HEAD") && pathname === "/polaris.css") {
-        const css = fs.existsSync(POLARIS_CSS_PATH)
-          ? fs.readFileSync(POLARIS_CSS_PATH, "utf8")
-          : "";
+        const css =
+          POLARIS_CSS ||
+          (fs.existsSync(POLARIS_CSS_PATH)
+            ? fs.readFileSync(POLARIS_CSS_PATH, "utf8")
+            : "");
         res.writeHead(200, {
           "Content-Type": "text/css; charset=utf-8",
-          "Cache-Control": "no-cache, no-store, must-revalidate",
+          "Cache-Control": "public, max-age=86400, stale-while-revalidate=604800",
           "Content-Length": Buffer.byteLength(css, "utf8")
         });
         if (method === "HEAD") {
@@ -117,6 +124,21 @@ export function createTermsLockServer(
           return;
         }
         res.end(css);
+        return;
+      }
+
+      // 0b. GET /app.bundle.js -> Client-side hydration script (embedded memory asset)
+      if ((method === "GET" || method === "HEAD") && pathname === "/app.bundle.js") {
+        res.writeHead(200, {
+          "Content-Type": "application/javascript; charset=utf-8",
+          "Cache-Control": "public, max-age=86400, stale-while-revalidate=604800",
+          "Content-Length": Buffer.byteLength(APP_BUNDLE_JS, "utf8")
+        });
+        if (method === "HEAD") {
+          res.end();
+          return;
+        }
+        res.end(APP_BUNDLE_JS);
         return;
       }
 
