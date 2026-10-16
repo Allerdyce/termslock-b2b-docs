@@ -86,21 +86,25 @@ export function createTermsLockServer(
       const pathname = url.pathname;
 
       // 0. GET /polaris.css -> Official @shopify/polaris stylesheet from node_modules
-      if (method === "GET" && pathname === "/polaris.css") {
+      if ((method === "GET" || method === "HEAD") && pathname === "/polaris.css") {
         const css = fs.existsSync(POLARIS_CSS_PATH)
           ? fs.readFileSync(POLARIS_CSS_PATH, "utf8")
           : "";
         res.writeHead(200, {
           "Content-Type": "text/css; charset=utf-8",
-          "Cache-Control": "public, max-age=3600",
+          "Cache-Control": "no-cache, no-store, must-revalidate",
           "Content-Length": Buffer.byteLength(css, "utf8")
         });
+        if (method === "HEAD") {
+          res.end();
+          return;
+        }
         res.end(css);
         return;
       }
 
       // 1. GET / -> Full Interactive Admin Rule Builder & Dry-Run Simulator HTML
-      if (method === "GET" && pathname === "/") {
+      if ((method === "GET" || method === "HEAD") && pathname === "/") {
         const html = renderEmbeddedRuleBuilderHtml({
           activePlan: "PLUS_ENTERPRISE",
           validationRules: state.validationRules,
@@ -108,8 +112,15 @@ export function createTermsLockServer(
         });
         res.writeHead(200, {
           "Content-Type": "text/html; charset=utf-8",
+          "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+          "Pragma": "no-cache",
+          "Expires": "0",
           "Content-Length": Buffer.byteLength(html, "utf8")
         });
+        if (method === "HEAD") {
+          res.end();
+          return;
+        }
         res.end(html);
         return;
       }

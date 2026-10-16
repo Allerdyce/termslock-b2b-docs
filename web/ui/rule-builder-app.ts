@@ -151,7 +151,7 @@ export function renderEmbeddedRuleBuilderHtml(
     .join("\n");
 
   return `<!DOCTYPE html>
-<html lang="en" class="Polaris-ThemeLight">
+<html lang="en" class="p-theme-light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -174,7 +174,10 @@ export function renderEmbeddedRuleBuilderHtml(
       --p-color-text-secondary: #616161;
       --p-color-border: #E3E3E3;
       --p-color-interactive: #008060;
-      --p-font-family-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'San Francisco', 'Segoe UI', Roboto, 'Onest', sans-serif;
+      --p-font-family-sans: -apple-system, BlinkMacSystemFont, 'San Francisco', 'Segoe UI', Roboto, 'Inter', 'Onest', sans-serif;
+    }
+    *, *::before, *::after {
+      box-sizing: border-box;
     }
     html, body {
       background-color: #F1F1F1;
@@ -184,55 +187,29 @@ export function renderEmbeddedRuleBuilderHtml(
       padding: 0;
       -webkit-font-smoothing: antialiased;
     }
-    /* Realistic Shopify Admin Embedded Top Breadcrumb Bar */
-    .shopify-admin-topbar {
-      background: #FFFFFF;
-      border-bottom: 1px solid #E3E3E3;
-      padding: 8px 28px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 12.5px;
-      color: #616161;
-    }
-    .shopify-admin-breadcrumbs {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-weight: 500;
-    }
-    .shopify-admin-breadcrumbs strong {
-      color: #303030;
-      font-weight: 600;
-    }
-    .shopify-admin-store-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 12px;
-      color: #616161;
-    }
-    /* Main Polaris Page Container */
+    /* Main Polaris Page Container (Fluid & Centered) */
     .Polaris-Page {
-      max-width: 1544px !important;
+      max-width: 1400px !important;
       margin: 0 auto !important;
-      padding: 14px 28px 20px 28px !important;
+      padding: 24px 28px 40px 28px !important;
     }
     .polaris-header-row {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      margin-bottom: 14px;
+      margin-bottom: 20px;
+      gap: 16px;
     }
     .polaris-title-stack {
       display: flex;
       flex-direction: column;
-      gap: 3px;
+      gap: 4px;
     }
     .polaris-title-line {
       display: flex;
       align-items: center;
       gap: 10px;
+      flex-wrap: wrap;
     }
     .polaris-title-line h1 {
       font-size: 20px;
@@ -245,82 +222,102 @@ export function renderEmbeddedRuleBuilderHtml(
       font-size: 13px;
       color: #616161;
       margin: 0;
+      line-height: 1.4;
     }
     .polaris-header-actions {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
+      flex-shrink: 0;
     }
     .polaris-save-toast {
       font-size: 12px;
       font-weight: 500;
       color: #0C5132;
       background: #CDFEE1;
-      padding: 4px 10px;
+      padding: 5px 12px;
       border-radius: 6px;
+      display: inline-block;
+      transition: all 0.2s ease;
     }
-    /* Authentic Polaris Buttons */
-    .Polaris-Button--primaryDark {
-      background: #1A1A1A;
-      color: #FFFFFF;
-      border: 1px solid #1A1A1A;
-      border-radius: 8px;
-      padding: 6px 14px;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      box-shadow: 0 1px 0 rgba(0, 0, 0, 0.08), inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+    .Polaris-Button {
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      padding: 7px 14px !important;
+      font-size: 13px !important;
+      font-weight: 550 !important;
+      border-radius: 8px !important;
+      cursor: pointer !important;
+      text-decoration: none !important;
+      line-height: 1 !important;
+      box-sizing: border-box !important;
+      transition: background 0.15s ease, border-color 0.15s ease;
     }
-    .Polaris-Button--primaryDark:hover {
-      background: #303030;
+    .Polaris-Button--variantPrimary {
+      background: #1A1A1A !important;
+      color: #FFFFFF !important;
+      border: 1px solid #1A1A1A !important;
+      box-shadow: 0 1px 0 rgba(0, 0, 0, 0.08) !important;
     }
-    .Polaris-Button--secondaryLight {
-      background: #FFFFFF;
-      color: #303030;
-      border: 1px solid #C9CCCF;
-      border-radius: 8px;
-      padding: 6px 12px;
-      font-size: 12.5px;
-      font-weight: 600;
-      cursor: pointer;
-      box-shadow: 0 1px 0 rgba(0, 0, 0, 0.04);
+    .Polaris-Button--variantPrimary:hover {
+      background: #303030 !important;
     }
-    .Polaris-Button--secondaryLight:hover {
-      background: #F7F7F7;
+    .Polaris-Button--variantSecondary {
+      background: #FFFFFF !important;
+      color: #303030 !important;
+      border: 1px solid #C9CCCF !important;
+      box-shadow: 0 1px 0 rgba(0, 0, 0, 0.04) !important;
+    }
+    .Polaris-Button--variantSecondary:hover {
+      background: #F7F7F7 !important;
     }
     .Polaris-Button--secondaryActive {
-      background: #F1F8F5;
-      border-color: #007F5F;
-      color: #0C5132;
+      background: #F1F8F5 !important;
+      border-color: #007F5F !important;
+      color: #0C5132 !important;
+      font-weight: 600 !important;
     }
-    /* Two-Column Polaris Layout Grid */
+    .checkout-scenario-pills .Polaris-Button {
+      padding: 5px 11px !important;
+      font-size: 12px !important;
+      border-radius: 6px !important;
+    }
+    /* Two-Column Responsive Polaris Layout Grid */
     .polaris-two-col-grid {
       display: grid;
-      grid-template-columns: 730px 738px;
+      grid-template-columns: minmax(0, 1.12fr) minmax(0, 0.88fr);
       gap: 20px;
       align-items: start;
+    }
+    @media (max-width: 1120px) {
+      .polaris-two-col-grid {
+        grid-template-columns: 1fr;
+      }
     }
     .polaris-card-stack {
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 16px;
     }
     /* Canonical Polaris v13 Card */
     .Polaris-Card-Box {
       background: #FFFFFF;
       border: 1px solid #E3E3E3;
       border-radius: 12px;
-      padding: 16px 18px;
+      padding: 0;
       box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+      overflow: hidden;
     }
     .polaris-card-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid #F1F1F1;
       display: flex;
       justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 10px;
+      align-items: center;
     }
     .polaris-card-header h2 {
-      font-size: 14px;
+      font-size: 14.5px;
       font-weight: 650;
       color: #303030;
       margin: 0;
@@ -330,12 +327,15 @@ export function renderEmbeddedRuleBuilderHtml(
       color: #616161;
       margin: 2px 0 0 0;
     }
+    .polaris-card-body {
+      padding: 18px 20px;
+    }
     /* Polaris Segmented Choice Pills */
     .polaris-segmented-pills {
       display: flex;
       gap: 6px;
-      margin-bottom: 10px;
-      background: #F7F7F7;
+      margin-bottom: 14px;
+      background: #F4F4F4;
       padding: 4px;
       border-radius: 8px;
       border: 1px solid #E3E3E3;
@@ -345,16 +345,20 @@ export function renderEmbeddedRuleBuilderHtml(
       background: transparent;
       border: none;
       border-radius: 6px;
-      padding: 5px 8px;
+      padding: 6px 10px;
       font-size: 11.5px;
       font-weight: 500;
       color: #616161;
       cursor: pointer;
       text-align: center;
+      transition: background 0.15s ease, color 0.15s ease;
+    }
+    .polaris-segment-btn:hover {
+      color: #1A1A1A;
     }
     .polaris-segment-btn--active {
       background: #FFFFFF;
-      color: #303030;
+      color: #1A1A1A;
       font-weight: 600;
       box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
     }
@@ -362,12 +366,17 @@ export function renderEmbeddedRuleBuilderHtml(
     .polaris-form-row-2 {
       display: grid;
       grid-template-columns: 1.35fr 1fr;
-      gap: 12px;
+      gap: 14px;
+    }
+    @media (max-width: 640px) {
+      .polaris-form-row-2 {
+        grid-template-columns: 1fr;
+      }
     }
     .polaris-field-item {
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 5px;
     }
     .Polaris-Label__Text {
       font-size: 12.5px;
@@ -376,17 +385,20 @@ export function renderEmbeddedRuleBuilderHtml(
     }
     .Polaris-TextField__InputBox {
       width: 100%;
-      padding: 6px 10px;
+      box-sizing: border-box;
+      padding: 7px 11px;
       border: 1px solid #8A8A8A;
       border-radius: 8px;
       font-size: 13px;
       color: #303030;
       background: #FFFFFF;
-      font-family: var(--p-font-family-sans);
+      font-family: inherit;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
     }
     .Polaris-TextField__InputBox:focus {
-      outline: 2px solid #005BD3;
-      border-color: transparent;
+      outline: none;
+      border-color: #005BD3;
+      box-shadow: 0 0 0 1px #005BD3;
     }
     .Polaris-TextField__HelpText {
       font-size: 11.5px;
@@ -395,36 +407,38 @@ export function renderEmbeddedRuleBuilderHtml(
     /* Polaris ChoiceList / Checkboxes */
     .polaris-checkbox-group {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 7px 14px;
-      margin-top: 10px;
-      padding-top: 10px;
+      grid-template-columns: 1fr;
+      gap: 9px;
+      margin-top: 14px;
+      padding-top: 14px;
       border-top: 1px solid #F1F1F1;
     }
     .Polaris-Choice-Label {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 9px;
       font-size: 12.5px;
       color: #303030;
       cursor: pointer;
+      user-select: none;
     }
     .Polaris-Choice-Label input[type="checkbox"] {
-      width: 15px;
-      height: 15px;
-      accent-color: #1A1A1A;
+      width: 16px;
+      height: 16px;
+      accent-color: #008060;
       border-radius: 4px;
+      cursor: pointer;
     }
     /* Right Column: Authentic Shopify One-Page B2B Checkout Preview */
     .checkout-preview-toolbar {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 10px;
+      margin-bottom: 12px;
       background: #F7F7F7;
       border: 1px solid #E3E3E3;
       border-radius: 8px;
-      padding: 6px 8px;
+      padding: 6px 10px;
     }
     .checkout-scenario-pills {
       display: flex;
@@ -434,18 +448,23 @@ export function renderEmbeddedRuleBuilderHtml(
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 8px;
-      margin-bottom: 12px;
+      margin-bottom: 14px;
       background: #FAFAFA;
       border: 1px solid #EAEAEA;
       border-radius: 8px;
-      padding: 8px 10px;
+      padding: 10px 12px;
+    }
+    @media (max-width: 640px) {
+      .checkout-test-inputs {
+        grid-template-columns: 1fr;
+      }
     }
     .checkout-test-inputs .Polaris-Label__Text {
       font-size: 11px;
       color: #616161;
     }
     .checkout-test-inputs .Polaris-TextField__InputBox {
-      padding: 4px 8px;
+      padding: 5px 8px;
       font-size: 12px;
     }
     /* Authentic Shopify One-Page Storefront Checkout Frame */
@@ -454,11 +473,12 @@ export function renderEmbeddedRuleBuilderHtml(
       border: 1px solid #DEDEDE;
       border-radius: 10px;
       overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
     }
     .shopify-checkout-header {
       background: #FAFAFA;
       border-bottom: 1px solid #EAEAEA;
-      padding: 10px 16px;
+      padding: 12px 16px;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -472,10 +492,10 @@ export function renderEmbeddedRuleBuilderHtml(
       gap: 8px;
     }
     .shopify-checkout-body {
-      padding: 14px 16px;
+      padding: 16px;
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 14px;
     }
     .shopify-checkout-section-heading {
       font-size: 13px;
@@ -491,18 +511,21 @@ export function renderEmbeddedRuleBuilderHtml(
       background: #FFFFFF;
       border: 1px solid #DEDEDE;
       border-radius: 6px;
-      padding: 7px 11px;
+      padding: 8px 12px;
       display: flex;
       flex-direction: column;
-      gap: 1px;
+      gap: 2px;
     }
     .shopify-floating-input--error {
-      border: 2px solid #D82C0D;
+      border: 1.5px solid #D82C0D;
       background: #FFFDFD;
     }
     .shopify-floating-label {
-      font-size: 11px;
+      font-size: 10.5px;
       color: #707070;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.2px;
     }
     .shopify-floating-value {
       font-size: 13px;
@@ -546,7 +569,7 @@ export function renderEmbeddedRuleBuilderHtml(
     }
     .checkout-payment-row {
       background: #FFFFFF;
-      padding: 8px 12px;
+      padding: 9px 12px;
       border-bottom: 1px solid #EAEAEA;
       display: flex;
       justify-content: space-between;
@@ -597,27 +620,11 @@ export function renderEmbeddedRuleBuilderHtml(
     }
   </style>
 </head>
-<body>
+<body class="p-theme-light">
   <!-- Shopify App Bridge v4 Title Bar -->
-  <ui-title-bar title="B2B Checkout &amp; Payment Rules"></ui-title-bar>
+  <ui-title-bar title="TermsLock: B2B Checkout &amp; Payment Rules"></ui-title-bar>
 
-  <!-- Subtle Shopify Admin Embedded Breadcrumb Frame -->
-  <div class="shopify-admin-topbar">
-    <div class="shopify-admin-breadcrumbs">
-      <span>Settings</span>
-      <span>/</span>
-      <span>Checkout and accounts</span>
-      <span>/</span>
-      <strong>TermsLock B2B Rules</strong>
-    </div>
-    <div class="shopify-admin-store-pill">
-      <span id="active-plan-label">${planSpec.name}</span>
-      <span>•</span>
-      <span id="rules-save-banner" class="polaris-save-toast">All changes saved</span>
-    </div>
-  </div>
-
-  <main class="Polaris-Page">
+  <main class="Polaris-Page Polaris-Page--fullWidth">
     <!-- Canonical Polaris Page Header -->
     <header class="Polaris-Page-Header polaris-header-row">
       <div class="polaris-title-stack">
@@ -626,12 +633,20 @@ export function renderEmbeddedRuleBuilderHtml(
           <span class="Polaris-Badge Polaris-Badge--toneSuccess">
             <span class="Polaris-Text--root Polaris-Text--bodySm">Active</span>
           </span>
+          <span class="Polaris-Badge Polaris-Badge--toneInfo">
+            <span class="Polaris-Text--root Polaris-Text--bodySm" id="active-plan-label">${planSpec.name}</span>
+          </span>
         </div>
         <p class="polaris-subtitle">Configure Purchase Order (PO) validation, wholesale minimums, freight address rules, and Net-30 invoice visibility.</p>
       </div>
       <div class="polaris-header-actions">
-        <button type="button" id="run-simulator-btn" class="Polaris-Button Polaris-Button--secondaryLight">Run checkout test</button>
-        <button type="button" id="save-rules-btn" class="Polaris-Button Polaris-Button--primaryDark">Save rules</button>
+        <span id="rules-save-banner" class="polaris-save-toast">All changes saved</span>
+        <button type="button" id="run-simulator-btn" class="Polaris-Button Polaris-Button--variantSecondary">
+          <span class="Polaris-Text--root Polaris-Text--bodyMd Polaris-Text--medium">Run checkout test</span>
+        </button>
+        <button type="button" id="save-rules-btn" class="Polaris-Button Polaris-Button--variantPrimary">
+          <span class="Polaris-Text--root Polaris-Text--bodyMd Polaris-Text--medium">Save rules</span>
+        </button>
       </div>
     </header>
 
@@ -651,23 +666,25 @@ export function renderEmbeddedRuleBuilderHtml(
             </label>
           </div>
 
-          <div class="polaris-segmented-pills" role="group" aria-label="PO Format Presets">
-            <button type="button" class="polaris-segment-btn polaris-segment-btn--active" data-regex="^PO-[0-9]{6}$">Standard Corporate (PO-XXXXXX)</button>
-            <button type="button" class="polaris-segment-btn" data-regex="^[0-9]{5,10}$">Numeric Only</button>
-            <button type="button" class="polaris-segment-btn" data-regex="^.+$">Any Non-Empty PO</button>
-            <button type="button" class="polaris-segment-btn" data-regex="^PO-[0-9]{5,10}$">Custom Pattern</button>
-          </div>
-
-          <div class="Polaris-FormLayout polaris-form-row-2">
-            <div class="polaris-field-item">
-              <label class="Polaris-Label__Text" for="po-regex-input">Purchase Order format pattern</label>
-              <input id="po-regex-input" name="poRegexPattern" class="Polaris-TextField__InputBox" type="text" value="${escapeHtml(validationRules.poRule.regexPattern)}" />
-              <span class="Polaris-TextField__HelpText">Validates the native B2B Purchase Order field at checkout</span>
+          <div class="polaris-card-body">
+            <div class="polaris-segmented-pills" role="group" aria-label="PO Format Presets">
+              <button type="button" class="polaris-segment-btn polaris-segment-btn--active" data-regex="^PO-[0-9]{6}$">Standard Corporate (PO-XXXXXX)</button>
+              <button type="button" class="polaris-segment-btn" data-regex="^[0-9]{5,10}$">Numeric Only</button>
+              <button type="button" class="polaris-segment-btn" data-regex="^.+$">Any Non-Empty PO</button>
+              <button type="button" class="polaris-segment-btn" data-regex="^PO-[0-9]{5,10}$">Custom Pattern</button>
             </div>
-            <div class="polaris-field-item">
-              <label class="Polaris-Label__Text" for="po-threshold-input">Minimum order subtotal requiring a PO ($)</label>
-              <input id="po-threshold-input" name="poSubtotalThreshold" class="Polaris-TextField__InputBox" type="number" step="50" value="${validationRules.poRule.subtotalThreshold}" />
-              <span class="Polaris-TextField__HelpText">Applies to all B2B company orders above threshold</span>
+
+            <div class="Polaris-FormLayout polaris-form-row-2">
+              <div class="polaris-field-item">
+                <label class="Polaris-Label__Text" for="po-regex-input">Purchase Order format pattern</label>
+                <input id="po-regex-input" name="poRegexPattern" class="Polaris-TextField__InputBox" type="text" value="${escapeHtml(validationRules.poRule.regexPattern)}" />
+                <span class="Polaris-TextField__HelpText">Validates the native B2B Purchase Order field at checkout</span>
+              </div>
+              <div class="polaris-field-item">
+                <label class="Polaris-Label__Text" for="po-threshold-input">Minimum order subtotal requiring a PO ($)</label>
+                <input id="po-threshold-input" name="poSubtotalThreshold" class="Polaris-TextField__InputBox" type="number" step="50" value="${validationRules.poRule.subtotalThreshold}" />
+                <span class="Polaris-TextField__HelpText">Applies to all B2B company orders above threshold</span>
+              </div>
             </div>
           </div>
         </section>
@@ -681,30 +698,32 @@ export function renderEmbeddedRuleBuilderHtml(
             </div>
           </div>
 
-          <div class="Polaris-FormLayout polaris-form-row-2">
-            <div class="polaris-field-item">
-              <label class="Polaris-Label__Text" for="moq-subtotal-input">Wholesale minimum order subtotal ($)</label>
-              <input id="moq-subtotal-input" name="minimumSubtotal" class="Polaris-TextField__InputBox" type="number" step="50" value="${validationRules.moqRule.minimumSubtotal}" />
+          <div class="polaris-card-body">
+            <div class="Polaris-FormLayout polaris-form-row-2">
+              <div class="polaris-field-item">
+                <label class="Polaris-Label__Text" for="moq-subtotal-input">Wholesale minimum order subtotal ($)</label>
+                <input id="moq-subtotal-input" name="minimumSubtotal" class="Polaris-TextField__InputBox" type="number" step="50" value="${validationRules.moqRule.minimumSubtotal}" />
+              </div>
+              <div class="polaris-field-item">
+                <label class="Polaris-Label__Text" for="sim-sku-qty-input">Case-pack quantity multiple (units)</label>
+                <input id="sim-sku-qty-input" class="Polaris-TextField__InputBox" type="number" value="${simulatorScenario.lineItems?.[0]?.quantity ?? 12}" />
+              </div>
             </div>
-            <div class="polaris-field-item">
-              <label class="Polaris-Label__Text" for="sim-sku-qty-input">Case-pack quantity multiple (units)</label>
-              <input id="sim-sku-qty-input" class="Polaris-TextField__InputBox" type="number" value="${simulatorScenario.lineItems?.[0]?.quantity ?? 12}" />
-            </div>
-          </div>
 
-          <div class="Polaris-ChoiceList polaris-checkbox-group">
-            <label class="Polaris-Choice-Label">
-              <input type="checkbox" id="toggle-moq-gate" ${validationRules.moqRule.enabled ? "checked" : ""} />
-              <span>Enforce 6-unit / 12-unit case-pack multiples</span>
-            </label>
-            <label class="Polaris-Choice-Label">
-              <input type="checkbox" id="toggle-pobox-gate" ${validationRules.billingRule.blockPoBoxOnFreight ? "checked" : ""} />
-              <span>Block P.O. Box addresses on freight &amp; pallet items</span>
-            </label>
-            <label class="Polaris-Choice-Label">
-              <input type="checkbox" id="toggle-hazmat-gate" ${validationRules.hazmatRule.enabled ? "checked" : ""} />
-              <span>Block incompatible hazmat items in the same cart</span>
-            </label>
+            <div class="Polaris-ChoiceList polaris-checkbox-group">
+              <label class="Polaris-Choice-Label">
+                <input type="checkbox" id="toggle-moq-gate" ${validationRules.moqRule.enabled ? "checked" : ""} />
+                <span>Enforce 6-unit / 12-unit case-pack multiples</span>
+              </label>
+              <label class="Polaris-Choice-Label">
+                <input type="checkbox" id="toggle-pobox-gate" ${validationRules.billingRule.blockPoBoxOnFreight ? "checked" : ""} />
+                <span>Block P.O. Box addresses on freight &amp; pallet items</span>
+              </label>
+              <label class="Polaris-Choice-Label">
+                <input type="checkbox" id="toggle-hazmat-gate" ${validationRules.hazmatRule.enabled ? "checked" : ""} />
+                <span>Block incompatible hazmat items in the same cart</span>
+              </label>
+            </div>
           </div>
         </section>
 
@@ -717,26 +736,28 @@ export function renderEmbeddedRuleBuilderHtml(
             </div>
           </div>
 
-          <div class="Polaris-FormLayout polaris-form-row-2">
-            <div class="polaris-field-item">
-              <label class="Polaris-Label__Text" for="net30-tags-input">Approved B2B customer tags</label>
-              <input id="net30-tags-input" name="authorizedNet30Tags" class="Polaris-TextField__InputBox" type="text" value="${escapeHtml(paymentRules.authorizedNet30Tags.join(", "))}" />
+          <div class="polaris-card-body">
+            <div class="Polaris-FormLayout polaris-form-row-2">
+              <div class="polaris-field-item">
+                <label class="Polaris-Label__Text" for="net30-tags-input">Approved B2B customer tags</label>
+                <input id="net30-tags-input" name="authorizedNet30Tags" class="Polaris-TextField__InputBox" type="text" value="${escapeHtml(paymentRules.authorizedNet30Tags.join(", "))}" />
+              </div>
+              <div class="polaris-field-item">
+                <label class="Polaris-Label__Text" for="wire-threshold-input">Hide credit card gateways on wholesale orders above ($)</label>
+                <input id="wire-threshold-input" name="highValueCardThreshold" class="Polaris-TextField__InputBox" type="number" step="500" value="${paymentRules.highValueCardThreshold}" />
+              </div>
             </div>
-            <div class="polaris-field-item">
-              <label class="Polaris-Label__Text" for="wire-threshold-input">Hide credit card gateways on wholesale orders above ($)</label>
-              <input id="wire-threshold-input" name="highValueCardThreshold" class="Polaris-TextField__InputBox" type="number" step="500" value="${paymentRules.highValueCardThreshold}" />
-            </div>
-          </div>
 
-          <div class="Polaris-ChoiceList polaris-checkbox-group">
-            <label class="Polaris-Choice-Label">
-              <input type="checkbox" id="toggle-net30-po" ${paymentRules.requirePoForNet30 ? "checked" : ""} />
-              <span>Hide Net-30 Invoice unless a valid PO number is entered</span>
-            </label>
-            <label class="Polaris-Choice-Label">
-              <input type="checkbox" id="toggle-cod-gate" ${paymentRules.hideCodForB2B ? "checked" : ""} />
-              <span>Hide Cash on Delivery (COD) on B2B orders</span>
-            </label>
+            <div class="Polaris-ChoiceList polaris-checkbox-group">
+              <label class="Polaris-Choice-Label">
+                <input type="checkbox" id="toggle-net30-po" ${paymentRules.requirePoForNet30 ? "checked" : ""} />
+                <span>Hide Net-30 Invoice unless a valid PO number is entered</span>
+              </label>
+              <label class="Polaris-Choice-Label">
+                <input type="checkbox" id="toggle-cod-gate" ${paymentRules.hideCodForB2B ? "checked" : ""} />
+                <span>Hide Cash on Delivery (COD) on B2B orders</span>
+              </label>
+            </div>
           </div>
         </section>
       </form>
@@ -754,14 +775,15 @@ export function renderEmbeddedRuleBuilderHtml(
           </span>
         </div>
 
-        <!-- 1-Click Scenario Preset Pills -->
-        <div class="checkout-preview-toolbar">
-          <div class="checkout-scenario-pills">
-            <button type="button" id="preset-scenario-pass" class="Polaris-Button--secondaryLight Polaris-Button--secondaryActive">Preview: Approved Net-30 Buyer</button>
-            <button type="button" id="preset-scenario-fail" class="Polaris-Button--secondaryLight">Preview: Blocked Invalid PO &amp; P.O. Box</button>
+        <div class="polaris-card-body">
+          <!-- 1-Click Scenario Preset Pills -->
+          <div class="checkout-preview-toolbar">
+            <div class="checkout-scenario-pills">
+              <button type="button" id="preset-scenario-pass" class="Polaris-Button Polaris-Button--variantSecondary Polaris-Button--secondaryActive">Scenario: Approved Net-30</button>
+              <button type="button" id="preset-scenario-fail" class="Polaris-Button Polaris-Button--variantSecondary">Scenario: Blocked PO &amp; Address</button>
+            </div>
+            <span class="Polaris-Badge Polaris-Badge--toneInfo"><span class="Polaris-Text--root Polaris-Text--bodySm">Interactive</span></span>
           </div>
-          <span style="font-size:11.5px;color:#616161;font-weight:500;">Live preview</span>
-        </div>
 
         <!-- Editable Test Inputs -->
         <form id="simulator-form" class="checkout-test-inputs" onsubmit="return false;">
@@ -844,6 +866,7 @@ export function renderEmbeddedRuleBuilderHtml(
               </ul>
             </div>
           </div>
+        </div>
         </div>
       </section>
     </div>
