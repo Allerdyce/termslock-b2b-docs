@@ -220,8 +220,8 @@ async function main() {
         await new Promise(r => setTimeout(r, 350));
         return {
           statusPill: document.getElementById('sim-status-pill').textContent.trim(),
-          errorsHtml: document.getElementById('sim-errors-container').innerText,
-          paymentsHtml: document.getElementById('sim-payments-container').innerText
+          errorsHtml: document.getElementById('sim-errors-container').textContent,
+          paymentsHtml: document.getElementById('sim-payments-container').textContent
         };
       })()
     `);
@@ -259,8 +259,8 @@ async function main() {
         await new Promise(r => setTimeout(r, 350));
         return {
           statusPill: document.getElementById('sim-status-pill').textContent.trim(),
-          errorsHtml: document.getElementById('sim-errors-container').innerText,
-          paymentsHtml: document.getElementById('sim-payments-container').innerText
+          errorsHtml: document.getElementById('sim-errors-container').textContent,
+          paymentsHtml: document.getElementById('sim-payments-container').textContent
         };
       })()
     `);
