@@ -23,6 +23,10 @@ import {
 } from "../web/simulator/dry-run-simulator.ts";
 import { renderEmbeddedRuleBuilderHtml } from "../web/ui/rule-builder-app.ts";
 import {
+  renderPrivacyPolicyHtml,
+  renderDemoPageHtml
+} from "../web/ui/public-pages.ts";
+import {
   handleGdprWebhookAsync,
   verifyShopifyWebhookHmacWebCrypto,
   type GdprTopic
@@ -57,9 +61,28 @@ export interface TermsLockWorkerState {
   paymentRules: TermsLockPaymentRulesConfig;
 }
 
+export const DEFAULT_INITIAL_VALIDATION_RULES: TermsLockRulesConfig = {
+  ...DEFAULT_RULES_CONFIG,
+  poRule: {
+    ...DEFAULT_RULES_CONFIG.poRule,
+    regexPattern: "^PO-[0-9]{6}$",
+    subtotalThreshold: 1000.0
+  },
+  moqRule: {
+    ...DEFAULT_RULES_CONFIG.moqRule,
+    minimumSubtotal: 500.0
+  }
+};
+
+export const DEFAULT_INITIAL_PAYMENT_RULES: TermsLockPaymentRulesConfig = {
+  ...DEFAULT_PAYMENT_RULES_CONFIG,
+  poRegexPattern: "^PO-[0-9]{6}$",
+  highValueCardThreshold: 5000.0
+};
+
 let workerState: TermsLockWorkerState = {
-  validationRules: structuredClone(DEFAULT_RULES_CONFIG),
-  paymentRules: structuredClone(DEFAULT_PAYMENT_RULES_CONFIG)
+  validationRules: structuredClone(DEFAULT_INITIAL_VALIDATION_RULES),
+  paymentRules: structuredClone(DEFAULT_INITIAL_PAYMENT_RULES)
 };
 
 export function getWorkerState(): TermsLockWorkerState {
@@ -68,8 +91,8 @@ export function getWorkerState(): TermsLockWorkerState {
 
 export function resetWorkerState(newState?: Partial<TermsLockWorkerState>): void {
   workerState = {
-    validationRules: structuredClone(newState?.validationRules ?? DEFAULT_RULES_CONFIG),
-    paymentRules: structuredClone(newState?.paymentRules ?? DEFAULT_PAYMENT_RULES_CONFIG)
+    validationRules: structuredClone(newState?.validationRules ?? DEFAULT_INITIAL_VALIDATION_RULES),
+    paymentRules: structuredClone(newState?.paymentRules ?? DEFAULT_INITIAL_PAYMENT_RULES)
   };
 }
 
@@ -134,6 +157,30 @@ export async function handleRequest(request: Request, env: Env): Promise<Respons
           "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
           "Pragma": "no-cache",
           "Expires": "0"
+        }
+      });
+    }
+
+    // 1b. GET /privacy -> Public Zero-Login Privacy & GDPR Compliance Page
+    if ((method === "GET" || method === "HEAD") && pathname === "/privacy") {
+      const html = renderPrivacyPolicyHtml();
+      return new Response(method === "HEAD" ? null : html, {
+        status: 200,
+        headers: {
+          "Content-Type": "text/html; charset=utf-8",
+          "Cache-Control": "public, max-age=3600"
+        }
+      });
+    }
+
+    // 1c. GET /demo -> Public Interactive Product Demo & Video Walkthrough
+    if ((method === "GET" || method === "HEAD") && pathname === "/demo") {
+      const html = renderDemoPageHtml("/demo-video.webm");
+      return new Response(method === "HEAD" ? null : html, {
+        status: 200,
+        headers: {
+          "Content-Type": "text/html; charset=utf-8",
+          "Cache-Control": "public, max-age=3600"
         }
       });
     }

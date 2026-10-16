@@ -1,5 +1,5 @@
 #:schema node_modules/wrangler/config-schema.json
-name = "termslock-shopify"
+name = "termslock-b2b"
 main = "src/worker.ts"
 compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat"]
@@ -8,7 +8,7 @@ compatibility_flags = ["nodejs_compat"]
 [vars]
 SHOPIFY_API_KEY = "e8ac31b94c825ffc72edc69866875aa9"
 SCOPES = "write_validations,write_payment_customizations,read_products"
-HOST = "https://termslock-shopify.evidencepair.workers.dev"
+HOST = "https://termslock-b2b.evidencepair.workers.dev"
 DEFAULT_WEBHOOK_SECRET = "shpss_termslock_2026_10_secret"
 
 # To set production secrets:

@@ -339,4 +339,29 @@ describe("Phase P9: Cloudflare Workers Edge Adapter Integration Suite", () => {
     const data = (await res.json()) as { error: string };
     expect(data.error).toContain("Route not found: GET /non-existent-path");
   });
+
+  it("13. GET /privacy serves public Zero-Login Privacy Policy with zero-PII architecture", async () => {
+    const req = new Request("https://termslock-b2b.evidencepair.workers.dev/privacy", {
+      method: "GET"
+    });
+    const res = await worker.fetch(req, mockEnv);
+    expect(res.status).toBe(200);
+    expect(res.headers.get("content-type")).toContain("text/html");
+    const html = await res.text();
+    expect(html).toContain("Privacy Policy &amp; GDPR Compliance");
+    expect(html).toContain("EvidencePair LLC");
+    expect(html).toContain("support@evidencepair.com");
+  });
+
+  it("14. GET /demo serves public Interactive Demo and Video Walkthrough page", async () => {
+    const req = new Request("https://termslock-b2b.evidencepair.workers.dev/demo", {
+      method: "GET"
+    });
+    const res = await worker.fetch(req, mockEnv);
+    expect(res.status).toBe(200);
+    expect(res.headers.get("content-type")).toContain("text/html");
+    const html = await res.text();
+    expect(html).toContain("TermsLock: B2B PO &amp; Net-30");
+    expect(html).toContain("Recorded Video Screencast");
+  });
 });

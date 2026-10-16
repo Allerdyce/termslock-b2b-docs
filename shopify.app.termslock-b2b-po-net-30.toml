@@ -3,7 +3,7 @@
 client_id = "e8ac31b94c825ffc72edc69866875aa9"
 name = "TermsLock: B2B PO & Net-30"
 handle = "termslock-b2b"
-application_url = "https://termslock-shopify.evidencepair.workers.dev"
+application_url = "https://termslock-b2b.evidencepair.workers.dev"
 embedded = true
 
 [build]
@@ -15,7 +15,7 @@ scopes = "write_validations,write_payment_customizations,read_products"
 
 [auth]
 redirect_urls = [
-  "https://termslock-shopify.evidencepair.workers.dev/api/auth/callback"
+  "https://termslock-b2b.evidencepair.workers.dev/api/auth/callback"
 ]
 
 [webhooks]

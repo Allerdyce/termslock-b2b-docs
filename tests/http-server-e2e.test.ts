@@ -375,5 +375,34 @@ describe("Phase P4 (QA Gate 5): End-to-End HTTP Server + Wasm Neutral Bundle Int
     expect(headRes.status).toBe(200);
     expect(headRes.headers.get("content-type")).toContain("application/javascript");
   });
+
+  it("44. GET /privacy serves public Zero-Login Privacy & GDPR Compliance page with zero PII retention", async () => {
+    const res = await fetch(`${baseUrl}/privacy`);
+    expect(res.status).toBe(200);
+    expect(res.headers.get("content-type")).toContain("text/html");
+    const html = await res.text();
+    expect(html).toContain("Privacy Policy &amp; GDPR Compliance");
+    expect(html).toContain("EvidencePair LLC");
+    expect(html).toContain("support@evidencepair.com");
+    expect(html).toContain("Zero-External PII Architecture");
+    expect(html).toContain("$app:termslock");
+
+    const headRes = await fetch(`${baseUrl}/privacy`, { method: "HEAD" });
+    expect(headRes.status).toBe(200);
+  });
+
+  it("45. GET /demo serves public Interactive Demo and Video Walkthrough page", async () => {
+    const res = await fetch(`${baseUrl}/demo`);
+    expect(res.status).toBe(200);
+    expect(res.headers.get("content-type")).toContain("text/html");
+    const html = await res.text();
+    expect(html).toContain("TermsLock: B2B PO &amp; Net-30");
+    expect(html).toContain("Recorded Video Screencast");
+    expect(html).toContain("/demo-video.webm");
+    expect(html).toContain("Approved Net-30 Buyer");
+
+    const headRes = await fetch(`${baseUrl}/demo`, { method: "HEAD" });
+    expect(headRes.status).toBe(200);
+  });
 });
 

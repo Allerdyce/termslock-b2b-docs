@@ -23,6 +23,10 @@ import {
   type GdprTopic
 } from "../web/webhooks/gdpr-handlers.ts";
 import {
+  renderPrivacyPolicyHtml,
+  renderDemoPageHtml
+} from "../web/ui/public-pages.ts";
+import {
   exchangeSessionTokenForAccessToken,
   createLiveShopifyAdminGraphQLClient
 } from "../web/admin/shopify-oauth.ts";
@@ -81,6 +85,25 @@ function sendJson(
   res.end(body);
 }
 
+export const DEFAULT_INITIAL_VALIDATION_RULES: TermsLockRulesConfig = {
+  ...DEFAULT_RULES_CONFIG,
+  poRule: {
+    ...DEFAULT_RULES_CONFIG.poRule,
+    regexPattern: "^PO-[0-9]{6}$",
+    subtotalThreshold: 1000.0
+  },
+  moqRule: {
+    ...DEFAULT_RULES_CONFIG.moqRule,
+    minimumSubtotal: 500.0
+  }
+};
+
+export const DEFAULT_INITIAL_PAYMENT_RULES: TermsLockPaymentRulesConfig = {
+  ...DEFAULT_PAYMENT_RULES_CONFIG,
+  poRegexPattern: "^PO-[0-9]{6}$",
+  highValueCardThreshold: 5000.0
+};
+
 /**
  * Creates a runnable Node.js HTTP server for TermsLock (Admin UI, Official @shopify/polaris CSS,
  * Metafield Compiler API, Live Dry-Run Simulator API, and Mandatory GDPR Webhook endpoint).
@@ -93,10 +116,10 @@ export function createTermsLockServer(
 } {
   const state: TermsLockServerState = {
     validationRules: structuredClone(
-      initialState?.validationRules ?? DEFAULT_RULES_CONFIG
+      initialState?.validationRules ?? DEFAULT_INITIAL_VALIDATION_RULES
     ),
     paymentRules: structuredClone(
-      initialState?.paymentRules ?? DEFAULT_PAYMENT_RULES_CONFIG
+      initialState?.paymentRules ?? DEFAULT_INITIAL_PAYMENT_RULES
     ),
     webhookSecret: initialState?.webhookSecret ?? DEFAULT_WEBHOOK_SECRET
   };
@@ -166,6 +189,62 @@ export function createTermsLockServer(
         }
         res.end(html);
         return;
+      }
+
+      // 1b. GET /privacy -> Public Zero-Login Privacy & GDPR Compliance Page
+      if ((method === "GET" || method === "HEAD") && pathname === "/privacy") {
+        const html = renderPrivacyPolicyHtml();
+        res.writeHead(200, {
+          "Content-Type": "text/html; charset=utf-8",
+          "Cache-Control": "public, max-age=3600",
+          "Content-Length": Buffer.byteLength(html, "utf8")
+        });
+        if (method === "HEAD") {
+          res.end();
+          return;
+        }
+        res.end(html);
+        return;
+      }
+
+      // 1c. GET /demo -> Public Interactive Product Demo & Video Walkthrough
+      if ((method === "GET" || method === "HEAD") && pathname === "/demo") {
+        const html = renderDemoPageHtml("/demo-video.webm");
+        res.writeHead(200, {
+          "Content-Type": "text/html; charset=utf-8",
+          "Cache-Control": "public, max-age=3600",
+          "Content-Length": Buffer.byteLength(html, "utf8")
+        });
+        if (method === "HEAD") {
+          res.end();
+          return;
+        }
+        res.end(html);
+        return;
+      }
+
+      // 1d. GET /demo-video.webm or /demo-video.mp4 -> Serve recorded walkthrough screencast
+      if ((method === "GET" || method === "HEAD") && (pathname === "/demo-video.webm" || pathname === "/demo-video.mp4")) {
+        const ext = pathname.endsWith(".mp4") ? ".mp4" : ".webm";
+        const videoPath = path.resolve(process.cwd(), `docs/shopify-store/termslock-screencast${ext}`);
+        if (fs.existsSync(videoPath)) {
+          const stat = fs.statSync(videoPath);
+          res.writeHead(200, {
+            "Content-Type": ext === ".mp4" ? "video/mp4" : "video/webm",
+            "Content-Length": stat.size,
+            "Cache-Control": "public, max-age=86400"
+          });
+          if (method === "HEAD") {
+            res.end();
+            return;
+          }
+          fs.createReadStream(videoPath).pipe(res);
+          return;
+        } else {
+          res.writeHead(404, { "Content-Type": "text/plain" });
+          res.end("Video not found");
+          return;
+        }
       }
 
       // 2. GET /api/rules -> Returns active rules and compiled $app:termslock metafields
