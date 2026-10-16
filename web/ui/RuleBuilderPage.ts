@@ -189,13 +189,46 @@ export function RuleBuilderPage({
       )
     ),
 
+    // DOMAIN NAVIGATION TABS (Option 1)
+    e(
+      "nav",
+      { className: "tl-nav-tabs", role: "tablist", "aria-label": "Rule configuration domains" },
+      e(
+        "button",
+        { type: "button", id: "tab-all", className: "tl-tab-item tl-tab-item--active", "data-tab": "all", role: "tab", "aria-selected": "true" },
+        e("span", null, "All rules"),
+        e("span", { className: "tl-tab-count" }, "4")
+      ),
+      e(
+        "button",
+        { type: "button", id: "tab-po", className: "tl-tab-item", "data-tab": "po", role: "tab", "aria-selected": "false" },
+        icons.document,
+        e("span", null, "Purchase orders"),
+        e("span", { className: "tl-tab-count" }, "1")
+      ),
+      e(
+        "button",
+        { type: "button", id: "tab-wholesale", className: "tl-tab-item", "data-tab": "wholesale", role: "tab", "aria-selected": "false" },
+        icons.truck,
+        e("span", null, "Wholesale & freight"),
+        e("span", { className: "tl-tab-count" }, "2")
+      ),
+      e(
+        "button",
+        { type: "button", id: "tab-payments", className: "tl-tab-item", "data-tab": "payments", role: "tab", "aria-selected": "false" },
+        icons.creditCard,
+        e("span", null, "Payment terms"),
+        e("span", { className: "tl-tab-count" }, "1")
+      )
+    ),
+
     // 2-COLUMN MAIN CONTENT GRID
     e(
       "div",
       { className: "tl-main-grid" },
 
       // =======================================================================
-      // LEFT COLUMN: 3 CONFIGURATION CARDS
+      // LEFT COLUMN: CONFIGURATION CARDS
       // =======================================================================
       e(
         "div",
@@ -207,7 +240,7 @@ export function RuleBuilderPage({
           // CARD 1: PURCHASE ORDER VALIDATION
           e(
             "section",
-            { className: "tl-card" },
+            { id: "card-po-validation", className: "tl-card", "data-domain": "po" },
             e(
               "div",
               { className: "tl-card-header" },
@@ -300,7 +333,7 @@ export function RuleBuilderPage({
           // CARD 2: WHOLESALE & FREIGHT PROTECTION
           e(
             "section",
-            { className: "tl-card" },
+            { id: "card-wholesale-freight", className: "tl-card", "data-domain": "wholesale" },
             e(
               "div",
               { className: "tl-card-header" },
@@ -440,7 +473,7 @@ export function RuleBuilderPage({
           // CARD 3: INVOICE & PAYMENT TERMS
           e(
             "section",
-            { className: "tl-card" },
+            { id: "card-payment-terms", className: "tl-card", "data-domain": "payments" },
             e(
               "div",
               { className: "tl-card-header" },

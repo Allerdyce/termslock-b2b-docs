@@ -212,6 +212,52 @@ export function renderEmbeddedRuleBuilderHtml(
       border-color: #9CA3AF;
     }
 
+    /* DOMAIN NAVIGATION TABS (Option 1) */
+    .tl-nav-tabs {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      border-bottom: 1px solid #E5E7EB;
+      margin-bottom: 20px;
+    }
+    .tl-tab-item {
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      padding: 9px 16px 11px;
+      font-size: 13.5px;
+      font-weight: 500;
+      color: #6B7280;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.15s ease;
+      font-family: inherit;
+      margin-bottom: -1px;
+      outline: none;
+    }
+    .tl-tab-item:hover {
+      color: #111827;
+    }
+    .tl-tab-item--active {
+      color: #111827;
+      font-weight: 600;
+      border-bottom-color: #111827;
+    }
+    .tl-tab-count {
+      background: #F3F4F6;
+      color: #4B5563;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 1px 6px;
+      border-radius: 9999px;
+    }
+    .tl-tab-item--active .tl-tab-count {
+      background: #E5E7EB;
+      color: #111827;
+    }
+
     /* 2-COLUMN MAIN GRID */
     .tl-main-grid {
       display: grid;
@@ -1005,6 +1051,44 @@ export function renderEmbeddedRuleBuilderHtml(
       const scenarioPassBtn = document.getElementById('preset-scenario-pass');
       const scenarioFailBtn = document.getElementById('preset-scenario-fail');
       const presetBtns = document.querySelectorAll('.tl-seg-btn');
+
+      // Domain Navigation Tabs switching (Option 1)
+      const tabBtns = document.querySelectorAll('.tl-tab-item');
+      const cards = {
+        po: document.getElementById('card-po-validation'),
+        wholesale: document.getElementById('card-wholesale-freight'),
+        payments: document.getElementById('card-payment-terms')
+      };
+
+      tabBtns.forEach(function (tab) {
+        tab.addEventListener('click', function () {
+          tabBtns.forEach(function (t) {
+            t.classList.remove('tl-tab-item--active');
+            t.setAttribute('aria-selected', 'false');
+          });
+          tab.classList.add('tl-tab-item--active');
+          tab.setAttribute('aria-selected', 'true');
+
+          const domain = tab.getAttribute('data-tab');
+          if (domain === 'all') {
+            if (cards.po) cards.po.style.display = 'block';
+            if (cards.wholesale) cards.wholesale.style.display = 'block';
+            if (cards.payments) cards.payments.style.display = 'block';
+          } else if (domain === 'po') {
+            if (cards.po) cards.po.style.display = 'block';
+            if (cards.wholesale) cards.wholesale.style.display = 'none';
+            if (cards.payments) cards.payments.style.display = 'none';
+          } else if (domain === 'wholesale') {
+            if (cards.po) cards.po.style.display = 'none';
+            if (cards.wholesale) cards.wholesale.style.display = 'block';
+            if (cards.payments) cards.payments.style.display = 'none';
+          } else if (domain === 'payments') {
+            if (cards.po) cards.po.style.display = 'none';
+            if (cards.wholesale) cards.wholesale.style.display = 'none';
+            if (cards.payments) cards.payments.style.display = 'block';
+          }
+        });
+      });
 
       // Accepted PO Format preset pill clicks
       presetBtns.forEach(function (btn) {
