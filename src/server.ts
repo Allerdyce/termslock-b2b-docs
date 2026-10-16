@@ -27,8 +27,11 @@ import {
   renderDemoPageHtml
 } from "../web/ui/public-pages.ts";
 import {
+  buildEmbeddedCspHeader,
   exchangeSessionTokenForAccessToken,
-  createLiveShopifyAdminGraphQLClient
+  createLiveShopifyAdminGraphQLClient,
+  isValidShopifyShopDomain,
+  verifyAndExtractShopFromSessionToken
 } from "../web/admin/shopify-oauth.ts";
 import {
   syncRulesToShopifyAdmin,
@@ -178,6 +181,7 @@ export function createTermsLockServer(
         });
         res.writeHead(200, {
           "Content-Type": "text/html; charset=utf-8",
+          "Content-Security-Policy": buildEmbeddedCspHeader(url.searchParams.get("shop")),
           "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
           "Pragma": "no-cache",
           "Expires": "0",
@@ -358,9 +362,9 @@ export function createTermsLockServer(
           state.validationRules = nextValidation;
           state.paymentRules = nextPayment;
 
-          // Check for live Shopify Admin GraphQL sync (Bearer <id_token> + shop domain)
+          // Check for live Shopify Admin GraphQL sync (Bearer <id_token> + verified shop domain)
           const authHeader = req.headers["authorization"] ?? "";
-          const shop = (
+          const rawShop = (
             (req.headers["x-shopify-shop-domain"] as string) ||
             url.searchParams.get("shop") ||
             (parsed.shop as string) ||
@@ -375,33 +379,43 @@ export function createTermsLockServer(
             synced: false
           };
 
-          if (shop && idToken && process.env.SHOPIFY_API_SECRET) {
-            try {
-              const tokenResult = await exchangeSessionTokenForAccessToken({
-                shop,
-                idToken
-              });
-              const client = createLiveShopifyAdminGraphQLClient(
-                shop,
-                tokenResult.accessToken
-              );
-              const syncRes = await syncRulesToShopifyAdmin(client, {
-                cartValidationOwnerId:
-                  (parsed.cartValidationOwnerId as string) ||
-                  "gid://shopify/CartValidation/1",
-                paymentCustomizationOwnerId:
-                  (parsed.paymentCustomizationOwnerId as string) ||
-                  "gid://shopify/PaymentCustomization/1",
-                validationRules: nextValidation,
-                paymentRules: nextPayment
-              });
-              liveSync = {
-                synced: true,
-                shop,
-                updatedCount: syncRes.updatedCount
-              };
-            } catch (syncErr) {
-              console.warn("[TermsLock Live Sync Warning]:", syncErr);
+          if (idToken && process.env.SHOPIFY_API_SECRET) {
+            const jwtShop = await verifyAndExtractShopFromSessionToken(
+              idToken,
+              process.env.SHOPIFY_API_SECRET
+            );
+            const verifiedShop =
+              jwtShop ??
+              (!idToken.includes(".") && isValidShopifyShopDomain(rawShop) ? rawShop : "");
+
+            if (verifiedShop) {
+              try {
+                const tokenResult = await exchangeSessionTokenForAccessToken({
+                  shop: verifiedShop,
+                  idToken
+                });
+                const client = createLiveShopifyAdminGraphQLClient(
+                  verifiedShop,
+                  tokenResult.accessToken
+                );
+                const syncRes = await syncRulesToShopifyAdmin(client, {
+                  cartValidationOwnerId:
+                    (parsed.cartValidationOwnerId as string) ||
+                    "gid://shopify/CartValidation/1",
+                  paymentCustomizationOwnerId:
+                    (parsed.paymentCustomizationOwnerId as string) ||
+                    "gid://shopify/PaymentCustomization/1",
+                  validationRules: nextValidation,
+                  paymentRules: nextPayment
+                });
+                liveSync = {
+                  synced: true,
+                  shop: verifiedShop,
+                  updatedCount: syncRes.updatedCount
+                };
+              } catch (syncErr) {
+                console.warn("[TermsLock Live Sync Warning]:", syncErr);
+              }
             }
           }
 
@@ -461,7 +475,7 @@ export function createTermsLockServer(
         const isTestCharge = parsed.isTestCharge ?? true;
 
         const authHeader = req.headers["authorization"] ?? "";
-        const shop = (
+        const rawShop = (
           (req.headers["x-shopify-shop-domain"] as string) ||
           url.searchParams.get("shop") ||
           parsed.shop ||
@@ -488,18 +502,28 @@ export function createTermsLockServer(
           })
         };
 
-        if (shop && idToken && process.env.SHOPIFY_API_SECRET) {
-          try {
-            const tokenResult = await exchangeSessionTokenForAccessToken({
-              shop,
-              idToken
-            });
-            client = createLiveShopifyAdminGraphQLClient(
-              shop,
-              tokenResult.accessToken
-            );
-          } catch (tokenErr) {
-            console.warn("[TermsLock Billing Token Exchange]:", tokenErr);
+        if (idToken && process.env.SHOPIFY_API_SECRET) {
+          const jwtShop = await verifyAndExtractShopFromSessionToken(
+            idToken,
+            process.env.SHOPIFY_API_SECRET
+          );
+          const verifiedShop =
+            jwtShop ??
+            (!idToken.includes(".") && isValidShopifyShopDomain(rawShop) ? rawShop : "");
+
+          if (verifiedShop) {
+            try {
+              const tokenResult = await exchangeSessionTokenForAccessToken({
+                shop: verifiedShop,
+                idToken
+              });
+              client = createLiveShopifyAdminGraphQLClient(
+                verifiedShop,
+                tokenResult.accessToken
+              );
+            } catch (tokenErr) {
+              console.warn("[TermsLock Billing Token Exchange]:", tokenErr);
+            }
           }
         }
 
