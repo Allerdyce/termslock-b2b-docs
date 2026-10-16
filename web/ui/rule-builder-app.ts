@@ -474,36 +474,50 @@ export function renderEmbeddedRuleBuilderHtml(
       gap: 20px;
       margin-bottom: 24px;
     }
+    .tl-page-header-left {
+      min-width: 0;
+    }
     .tl-title-row {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
       flex-wrap: wrap;
     }
     .tl-page-title {
-      font-size: 26px;
+      font-size: 24px;
       font-weight: 700;
       color: #111827;
       letter-spacing: -0.02em;
+      line-height: 1.25;
     }
     .tl-badge-active {
       background: #DEF7EC;
       color: #03543F;
-      font-size: 12px;
+      font-size: 11.5px;
       font-weight: 600;
-      padding: 3px 10px;
+      padding: 3px 9px;
       border-radius: 9999px;
+      white-space: nowrap !important;
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      line-height: 1.2;
     }
     .tl-badge-plus {
       background: #E1EFFE;
       color: #1E429F;
-      font-size: 12px;
+      font-size: 11.5px;
       font-weight: 600;
-      padding: 3px 10px;
+      padding: 3px 9px;
       border-radius: 9999px;
+      white-space: nowrap !important;
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      line-height: 1.2;
     }
     .tl-page-subtitle {
-      font-size: 14px;
+      font-size: 13.5px;
       color: #6B7280;
       margin-top: 4px;
     }
@@ -511,7 +525,20 @@ export function renderEmbeddedRuleBuilderHtml(
     .tl-page-header-actions {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
+      flex-shrink: 0;
+      flex-wrap: nowrap;
+    }
+    @media (max-width: 960px) {
+      .tl-page-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 16px;
+      }
+      .tl-page-header-actions {
+        justify-content: flex-start;
+        flex-wrap: wrap;
+      }
     }
     .tl-save-status {
       display: flex;
@@ -521,19 +548,24 @@ export function renderEmbeddedRuleBuilderHtml(
       font-weight: 500;
       color: #374151;
       padding: 4px 8px;
+      white-space: nowrap !important;
+      flex-shrink: 0;
     }
     .tl-btn {
       display: inline-flex;
       align-items: center;
       justify-content: center;
       gap: 6px;
-      font-size: 13.5px;
+      font-size: 13px;
       font-weight: 600;
-      padding: 9px 18px;
+      padding: 8px 16px;
       border-radius: 8px;
       cursor: pointer;
       transition: all 0.15s ease;
       font-family: inherit;
+      white-space: nowrap !important;
+      flex-shrink: 0;
+      line-height: 1.2;
     }
     .tl-btn-primary {
       background: #111827;
@@ -562,12 +594,20 @@ export function renderEmbeddedRuleBuilderHtml(
       gap: 6px;
       border-bottom: 1px solid #E5E7EB;
       margin-bottom: 20px;
+      overflow-x: auto;
+      overflow-y: hidden;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: 1px;
+    }
+    .tl-nav-tabs::-webkit-scrollbar {
+      display: none;
     }
     .tl-tab-item {
       background: transparent;
       border: none;
       border-bottom: 2px solid transparent;
-      padding: 9px 16px 11px;
+      padding: 9px 14px 11px;
       font-size: 13.5px;
       font-weight: 500;
       color: #6B7280;
@@ -579,6 +619,8 @@ export function renderEmbeddedRuleBuilderHtml(
       font-family: inherit;
       margin-bottom: -1px;
       outline: none;
+      white-space: nowrap !important;
+      flex-shrink: 0;
     }
     .tl-tab-item:hover {
       color: #111827;
@@ -595,6 +637,8 @@ export function renderEmbeddedRuleBuilderHtml(
       font-weight: 600;
       padding: 1px 6px;
       border-radius: 9999px;
+      white-space: nowrap !important;
+      flex-shrink: 0;
     }
     .tl-tab-item--active .tl-tab-count {
       background: #E5E7EB;
@@ -608,7 +652,7 @@ export function renderEmbeddedRuleBuilderHtml(
       gap: 24px;
       align-items: start;
     }
-    @media (max-width: 1024px) {
+    @media (max-width: 1140px) {
       .tl-main-grid {
         grid-template-columns: 1fr;
       }
@@ -672,13 +716,14 @@ export function renderEmbeddedRuleBuilderHtml(
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 16px;
+      gap: 12px;
       margin-bottom: 18px;
     }
     .tl-card-header-left {
       display: flex;
       align-items: center;
       gap: 12px;
+      min-width: 0;
     }
     .tl-card-icon-wrap {
       width: 36px;
@@ -692,14 +737,18 @@ export function renderEmbeddedRuleBuilderHtml(
       flex-shrink: 0;
     }
     .tl-card-title {
-      font-size: 16px;
+      font-size: 15.5px;
       font-weight: 600;
       color: #111827;
       letter-spacing: -0.01em;
+      white-space: nowrap;
     }
     .tl-card-desc {
-      font-size: 13px;
+      font-size: 12.5px;
       color: #6B7280;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     /* TOGGLE SWITCH (iOS / Polaris style) */
@@ -761,6 +810,11 @@ export function renderEmbeddedRuleBuilderHtml(
       margin-top: 8px;
       margin-bottom: 16px;
     }
+    @media (max-width: 640px) {
+      .tl-segmented-group {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
     .tl-seg-btn {
       background: transparent;
       border: 1.5px solid transparent;
@@ -795,6 +849,11 @@ export function renderEmbeddedRuleBuilderHtml(
       grid-template-columns: 1fr 1fr;
       gap: 16px;
       margin-bottom: 16px;
+    }
+    @media (max-width: 640px) {
+      .tl-inputs-2col {
+        grid-template-columns: 1fr;
+      }
     }
     .tl-field-group {
       display: flex;
@@ -951,13 +1010,16 @@ export function renderEmbeddedRuleBuilderHtml(
 
     /* RIGHT COLUMN: CHECKOUT PREVIEW CARD */
     .tl-status-badge {
-      font-size: 12px;
+      font-size: 11.5px;
       font-weight: 600;
-      padding: 4px 10px;
+      padding: 3px 10px;
       border-radius: 9999px;
       display: inline-flex;
       align-items: center;
       gap: 4px;
+      white-space: nowrap !important;
+      flex-shrink: 0;
+      line-height: 1.2;
     }
     .tl-status-badge--passed {
       background: #DEF7EC;
@@ -983,8 +1045,8 @@ export function renderEmbeddedRuleBuilderHtml(
       background: transparent;
       border: 1.5px solid transparent;
       border-radius: 6px;
-      padding: 7px 12px;
-      font-size: 13px;
+      padding: 7px 10px;
+      font-size: 12.5px;
       font-weight: 500;
       color: #4B5563;
       cursor: pointer;
@@ -992,7 +1054,7 @@ export function renderEmbeddedRuleBuilderHtml(
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
+      gap: 6px;
       transition: all 0.15s ease;
       font-family: inherit;
     }
@@ -1039,21 +1101,37 @@ export function renderEmbeddedRuleBuilderHtml(
       font-weight: 500;
       color: #374151;
       cursor: pointer;
+      white-space: nowrap !important;
+      flex-shrink: 0;
     }
     .tl-test-customer-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 10px;
+    }
+    @media (max-width: 1320px) and (min-width: 1141px) {
+      .tl-test-customer-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+    @media (max-width: 640px) {
+      .tl-test-customer-grid {
+        grid-template-columns: 1fr;
+      }
     }
     .tl-test-field {
       display: flex;
       flex-direction: column;
+      min-width: 0;
     }
     .tl-test-label {
       font-size: 11.5px;
       font-weight: 500;
       color: #6B7280;
       margin-bottom: 3px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     .tl-test-input {
       width: 100%;
@@ -1065,6 +1143,7 @@ export function renderEmbeddedRuleBuilderHtml(
       color: #111827;
       background: #FFFFFF;
       font-family: inherit;
+      box-sizing: border-box;
     }
 
     /* STOREFRONT CHECKOUT FRAME */
@@ -1306,6 +1385,11 @@ export function renderEmbeddedRuleBuilderHtml(
       font-weight: 600;
       padding: 2px 8px;
       border-radius: 9999px;
+      white-space: nowrap !important;
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      line-height: 1.2;
     }
     .tl-pill-avail {
       background: #F3F4F6;
@@ -1314,6 +1398,11 @@ export function renderEmbeddedRuleBuilderHtml(
       font-weight: 500;
       padding: 2px 8px;
       border-radius: 6px;
+      white-space: nowrap !important;
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      line-height: 1.2;
     }
     .tl-pill-hidden {
       background: #FDE8E8;
@@ -1322,6 +1411,11 @@ export function renderEmbeddedRuleBuilderHtml(
       font-weight: 500;
       padding: 2px 8px;
       border-radius: 6px;
+      white-space: nowrap !important;
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      line-height: 1.2;
     }
 
     /* RESULT BANNER */
