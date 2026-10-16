@@ -192,8 +192,8 @@ export async function handleRequest(request: Request, env: Env): Promise<Respons
     ) {
       const isMp4 = pathname.endsWith(".mp4");
       const cdnUrl = isMp4
-        ? "https://raw.githubusercontent.com/Allerdyce/termslock-b2b-docs/main/docs/shopify-store/termslock-screencast.mp4"
-        : "https://raw.githubusercontent.com/Allerdyce/termslock-b2b-docs/main/docs/shopify-store/termslock-screencast.webm";
+        ? "https://raw.githubusercontent.com/Allerdyce/termslock-b2b-docs/main/docs/shopify-store/termslock-screencast.mp4?v=p13-clean"
+        : "https://raw.githubusercontent.com/Allerdyce/termslock-b2b-docs/main/docs/shopify-store/termslock-screencast.webm?v=p13-clean";
 
       const cdnResponse = await fetch(cdnUrl, {
         headers: request.headers.get("Range") ? { Range: request.headers.get("Range")! } : undefined
@@ -205,7 +205,7 @@ export async function handleRequest(request: Request, env: Env): Promise<Respons
 
       const headers = new Headers();
       headers.set("Content-Type", isMp4 ? "video/mp4" : "video/webm");
-      headers.set("Cache-Control", "public, max-age=86400, stale-while-revalidate=604800");
+      headers.set("Cache-Control", "public, max-age=3600");
       headers.set("Access-Control-Allow-Origin", "*");
       headers.set("Accept-Ranges", "bytes");
 
@@ -220,29 +220,31 @@ export async function handleRequest(request: Request, env: Env): Promise<Respons
       });
     }
 
-    // 1e. Static Store Assets Proxy: /app-icon.png and /screenshot-[1-3].png
+    // 1e. Static Store Assets Proxy: /app-icon.png, /app-icon.jpg, and /screenshot-[1-3].png
     if (
       (method === "GET" || method === "HEAD") &&
       (pathname === "/app-icon.png" ||
+        pathname === "/app-icon.jpg" ||
         pathname === "/screenshot-1.png" ||
         pathname === "/screenshot-2.png" ||
         pathname === "/screenshot-3.png")
     ) {
       const filenameMap: Record<string, string> = {
         "/app-icon.png": "app-icon-1200x1200.png",
+        "/app-icon.jpg": "app-icon-1200x1200.jpg",
         "/screenshot-1.png": "01-b2b-po-number-checkout-validation.png",
         "/screenshot-2.png": "02-net30-payment-method-customization.png",
         "/screenshot-3.png": "03-wholesale-moq-dryrun-simulator.png"
       };
       const filename = filenameMap[pathname];
-      const cdnUrl = `https://raw.githubusercontent.com/Allerdyce/termslock-b2b-docs/main/docs/shopify-store/screenshots/${filename}`;
+      const cdnUrl = `https://raw.githubusercontent.com/Allerdyce/termslock-b2b-docs/main/docs/shopify-store/screenshots/${filename}?v=p13-clean`;
       const cdnResponse = await fetch(cdnUrl);
       if (!cdnResponse.ok) {
         return new Response("Image asset unavailable", { status: 502 });
       }
       const headers = new Headers();
-      headers.set("Content-Type", "image/png");
-      headers.set("Cache-Control", "public, max-age=86400, stale-while-revalidate=604800");
+      headers.set("Content-Type", pathname.endsWith(".jpg") ? "image/jpeg" : "image/png");
+      headers.set("Cache-Control", "public, max-age=3600");
       headers.set("Access-Control-Allow-Origin", "*");
       const cl = cdnResponse.headers.get("Content-Length");
       if (cl) headers.set("Content-Length", cl);
