@@ -4,7 +4,8 @@
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "allowImportingTsExtensions": true,
-    "lib": ["ES2022"],
+    "jsx": "react-jsx",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "strict": true,
     "noImplicitAny": true,
     "strictNullChecks": true,
@@ -19,9 +20,12 @@
   },
   "include": [
     "src/**/*.ts",
+    "src/**/*.tsx",
     "extensions/**/*.ts",
     "web/**/*.ts",
-    "tests/**/*.ts"
+    "web/**/*.tsx",
+    "tests/**/*.ts",
+    "tests/**/*.tsx"
   ],
   "exclude": [
     "node_modules",

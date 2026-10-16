@@ -14,10 +14,16 @@
     "build:assets": "python3 scripts/generate_store_assets.py"
   },
   "dependencies": {
-    "@shopify/polaris": "^13.9.5"
+    "@shopify/polaris": "^13.9.5",
+    "@shopify/polaris-icons": "^9.3.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
+    "@types/react": "^18.3.31",
+    "@types/react-dom": "^18.3.7",
+    "esbuild": "^0.28.2",
     "typescript": "^5.7.2",
     "vitest": "^2.1.8"
   },
