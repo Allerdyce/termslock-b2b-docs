@@ -136,6 +136,9 @@ export function RuleBuilderPage({
     "div",
     { className: "tl-page-canvas" },
 
+    // App Bridge v4 Title Bar Component
+    e("ui-title-bar", { title: "B2B Checkout & Payment Rules" }),
+
     // TOP BREADCRUMB
     e(
       "div",

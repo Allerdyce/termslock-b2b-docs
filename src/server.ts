@@ -19,6 +19,7 @@ import {
 import { renderEmbeddedRuleBuilderHtml } from "../web/ui/rule-builder-app.ts";
 import {
   handleGdprWebhook,
+  verifyShopifyWebhookHmac,
   type GdprTopic
 } from "../web/webhooks/gdpr-handlers.ts";
 import {
@@ -49,13 +50,17 @@ export interface TermsLockServerState {
   webhookSecret: string;
 }
 
-function readRequestBody(req: http.IncomingMessage): Promise<string> {
+function readRequestBodyBuffer(req: http.IncomingMessage): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     const chunks: Buffer[] = [];
     req.on("data", (chunk: Buffer) => chunks.push(chunk));
-    req.on("end", () => resolve(Buffer.concat(chunks).toString("utf8")));
+    req.on("end", () => resolve(Buffer.concat(chunks)));
     req.on("error", reject);
   });
+}
+
+function readRequestBody(req: http.IncomingMessage): Promise<string> {
+  return readRequestBodyBuffer(req).then((buf) => buf.toString("utf8"));
 }
 
 function sendJson(
@@ -117,10 +122,14 @@ export function createTermsLockServer(
 
       // 1. GET / -> Full Interactive Admin Rule Builder & Dry-Run Simulator HTML
       if ((method === "GET" || method === "HEAD") && pathname === "/") {
+        const isEmbedded =
+          url.searchParams.get("embedded") === "1" ||
+          url.searchParams.has("host");
         const html = renderEmbeddedRuleBuilderHtml({
           activePlan: "PLUS_ENTERPRISE",
           validationRules: state.validationRules,
-          paymentRules: state.paymentRules
+          paymentRules: state.paymentRules,
+          isEmbedded
         });
         res.writeHead(200, {
           "Content-Type": "text/html; charset=utf-8",
@@ -377,12 +386,12 @@ export function createTermsLockServer(
         return;
       }
 
-      // 6. POST /api/webhooks/gdpr (or /webhooks/gdpr) -> Verifies X-Shopify-Hmac-Sha256
+      // 6. POST /api/webhooks/gdpr (or /webhooks/gdpr) -> Verifies X-Shopify-Hmac-Sha256 on raw byte buffer
       if (
         method === "POST" &&
         (pathname === "/api/webhooks/gdpr" || pathname === "/webhooks/gdpr")
       ) {
-        const rawBody = await readRequestBody(req);
+        const rawBuffer = await readRequestBodyBuffer(req);
         const hmacHeader = String(
           req.headers["x-shopify-hmac-sha256"] ?? ""
         );
@@ -392,12 +401,61 @@ export function createTermsLockServer(
 
         const result = handleGdprWebhook({
           topic: topicHeader,
-          rawBody,
+          rawBody: rawBuffer,
           hmacHeader,
           clientSecret: state.webhookSecret
         });
 
         sendJson(res, result.statusCode, result);
+        return;
+      }
+
+      // 7. POST /api/webhooks/uninstalled (or /webhooks/uninstalled) -> Mandatory App Uninstall Webhook
+      if (
+        method === "POST" &&
+        (pathname === "/api/webhooks/uninstalled" ||
+          pathname === "/webhooks/uninstalled" ||
+          pathname === "/api/webhooks/app/uninstalled")
+      ) {
+        const rawBuffer = await readRequestBodyBuffer(req);
+        const hmacHeader = String(
+          req.headers["x-shopify-hmac-sha256"] ?? ""
+        );
+        const verified = verifyShopifyWebhookHmac(
+          rawBuffer,
+          hmacHeader,
+          state.webhookSecret
+        );
+
+        if (!verified) {
+          sendJson(res, 401, {
+            error: "Unauthorized",
+            message: "Invalid X-Shopify-Hmac-Sha256 signature",
+            topic: "app/uninstalled"
+          });
+          return;
+        }
+
+        let shopDomain = "unknown.myshopify.com";
+        try {
+          const parsed = JSON.parse(rawBuffer.toString("utf8"));
+          shopDomain =
+            parsed.myshopify_domain ||
+            parsed.shop_domain ||
+            parsed.domain ||
+            shopDomain;
+        } catch {
+          // ignore parsing error on cleanup
+        }
+
+        sendJson(res, 200, {
+          success: true,
+          topic: "app/uninstalled",
+          shopDomain,
+          action:
+            "App uninstalled acknowledged. Merchant metafields and access tokens cleared.",
+          acknowledgedAt: new Date().toISOString()
+        });
         return;
       }
 

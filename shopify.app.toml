@@ -18,6 +18,7 @@ scopes = "write_cart_validations,write_payment_customizations,read_customers,rea
 
 [auth]
 redirect_urls = [
+  "https://termslock.evidencepair.com/api/auth/callback",
   "https://termslock.evidencepair.com/auth/callback",
   "https://termslock.evidencepair.com/auth/shopify/callback"
 ]
@@ -28,6 +29,10 @@ api_version = "2026-10"
   [[webhooks.subscriptions]]
   compliance_topics = ["customers/data_request", "customers/redact", "shop/redact"]
   uri = "/api/webhooks/gdpr"
+
+  [[webhooks.subscriptions]]
+  topics = ["app/uninstalled"]
+  uri = "/api/webhooks/uninstalled"
 
 [pos]
 embedded = false

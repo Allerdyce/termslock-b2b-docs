@@ -1,4 +1,8 @@
 export {
+  AdminHostShell,
+  type AdminHostShellProps
+} from "./AdminHostShell.ts";
+export {
   RuleBuilderPage,
   type RuleBuilderPageProps
 } from "./RuleBuilderPage.ts";

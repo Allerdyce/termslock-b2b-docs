@@ -16,6 +16,7 @@ import {
   executeDryRunSimulation,
   type DryRunSimulatorScenario
 } from "../simulator/dry-run-simulator.ts";
+import { AdminHostShell } from "./AdminHostShell.ts";
 import { RuleBuilderPage } from "./RuleBuilderPage.ts";
 
 export interface EmbeddedAdminViewModel {
@@ -23,6 +24,7 @@ export interface EmbeddedAdminViewModel {
   validationRules: TermsLockRulesConfig;
   paymentRules: TermsLockPaymentRulesConfig;
   simulatorScenario: DryRunSimulatorScenario;
+  isEmbedded?: boolean;
 }
 
 export const DEFAULT_SIMULATOR_SCENARIO: DryRunSimulatorScenario = {
@@ -49,36 +51,61 @@ export function renderEmbeddedRuleBuilderHtml(
   const paymentRules = model?.paymentRules ?? DEFAULT_PAYMENT_RULES_CONFIG;
   const simulatorScenario =
     model?.simulatorScenario ?? DEFAULT_SIMULATOR_SCENARIO;
+  const isEmbedded = model?.isEmbedded ?? false;
 
   const compiledVal = compileValidationRulesMetafield(validationRules);
   const compiledPay = compilePaymentRulesMetafield(paymentRules);
   const simulation = executeDryRunSimulation(simulatorScenario);
   const planInfo = TERMSLOCK_BILLING_PLANS[activePlan];
 
-  // Render the pure React component tree to string
+  // Render the pure React component tree + Admin Host Shell to string
   const pageHtml = ReactDOMServer.renderToString(
-    React.createElement(RuleBuilderPage, {
-      validationRules,
-      paymentRules,
-      simulatorScenario,
-      simulation,
-      compiledVal,
-      compiledPay,
-      planName: planInfo.name
-    })
+    React.createElement(
+      AdminHostShell,
+      {
+        storeName: "Apex Industrial B2B",
+        activeAppName: "TermsLock B2B Rules",
+        planName: planInfo.name,
+        isEmbedded
+      },
+      React.createElement(RuleBuilderPage, {
+        validationRules,
+        paymentRules,
+        simulatorScenario,
+        simulation,
+        compiledVal,
+        compiledPay,
+        planName: planInfo.name
+      })
+    )
   );
 
   return `<!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="p-theme-light ${isEmbedded ? "is-embedded" : ""}">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="shopify-api-key" content="termslock_mock_client_id_2026" />
+  <meta name="shopify-api-key" content="${process.env.SHOPIFY_API_KEY || "SHOPIFY_API_KEY_PLACEHOLDER"}" />
+  <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
   <meta name="termslock-validator-handle" content="termslock-checkout-validator" />
   <meta name="termslock-payment-handle" content="termslock-payment-gate" />
   <!-- Active Plan: ${planInfo.name} (Shopify Plus & Enterprise Wholesale Plan) -->
   <title>TermsLock — B2B Checkout &amp; Payment Rules</title>
-  <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
+  <script>
+    (function () {
+      try {
+        var isIframe = window.top !== window.self;
+        var search = window.location.search || '';
+        var isEmbedded = isIframe || search.indexOf('embedded=1') !== -1 || search.indexOf('host=') !== -1;
+        if (isEmbedded) {
+          document.documentElement.classList.add('is-embedded');
+          if (document.body) document.body.classList.add('is-embedded');
+        }
+      } catch (err) {
+        document.documentElement.classList.add('is-embedded');
+      }
+    })();
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Onest:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -100,8 +127,321 @@ export function renderEmbeddedRuleBuilderHtml(
       font-family: var(--font-family);
       font-size: 14px;
       line-height: 1.5;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
+    /* AUTHENTIC SHOPIFY ADMIN HOST SHELL */
+    .shopify-admin-host-frame {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      background: #F1F1F1;
+    }
+    /* 1. TOP DARK ADMIN BAR (48px, #1A1A1A) */
+    .shopify-host-topbar {
+      height: 48px;
+      background: #1A1A1A;
+      color: #E3E3E3;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      border-bottom: 1px solid #2B2B2B;
+    }
+    .shopify-host-topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .shopify-host-logo-wrapper {
+      display: flex;
+      align-items: center;
+      color: #999999;
+    }
+    .shopify-host-store-switcher {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      color: #FFFFFF;
+      background: rgba(255, 255, 255, 0.06);
+    }
+    .shopify-host-store-switcher:hover {
+      background: rgba(255, 255, 255, 0.12);
+    }
+    .shopify-host-plan-badge {
+      font-size: 11px;
+      font-weight: 600;
+      background: rgba(0, 128, 96, 0.35);
+      color: #A3E6CD;
+      padding: 2px 6px;
+      border-radius: 4px;
+      letter-spacing: 0.2px;
+    }
+    .shopify-host-topbar-center {
+      flex: 1;
+      max-width: 480px;
+      margin: 0 20px;
+    }
+    .shopify-host-search-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #2B2B2B;
+      border: 1px solid #383838;
+      border-radius: 8px;
+      padding: 5px 12px;
+      color: #8C8C8C;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .shopify-host-search-placeholder {
+      flex: 1;
+    }
+    .shopify-host-search-kbd {
+      font-size: 11px;
+      background: #3B3B3B;
+      color: #D4D4D4;
+      padding: 2px 5px;
+      border-radius: 4px;
+      border: 1px solid #4D4D4D;
+      font-family: monospace;
+    }
+    .shopify-host-topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .shopify-host-icon-btn {
+      color: #A6A6A6;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      padding: 6px;
+      border-radius: 6px;
+    }
+    .shopify-host-icon-btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: #FFFFFF;
+    }
+    .shopify-host-avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #4A4A4A;
+      color: #FFFFFF;
+      font-size: 11px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      cursor: pointer;
+    }
+    .shopify-host-avatar-status {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #008060;
+      border: 1.5px solid #1A1A1A;
+    }
+
+    /* 2. BODY LAYOUT: SIDEBAR + MAIN VIEWPORT */
+    .shopify-host-body {
+      display: flex;
+      flex: 1;
+    }
+    .shopify-host-sidebar {
+      width: 240px;
+      background: #EBEBEB;
+      border-right: 1px solid #DEDEDE;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      flex-shrink: 0;
+      padding: 12px 8px;
+    }
+    .shopify-host-nav-group {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .shopify-host-nav-heading {
+      font-size: 11px;
+      font-weight: 600;
+      color: #6D7175;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 10px 10px 4px 10px;
+    }
+    .shopify-host-nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 10px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #303030;
+      cursor: pointer;
+      transition: background 0.15s ease;
+      position: relative;
+    }
+    .shopify-host-nav-item:hover {
+      background: rgba(0, 0, 0, 0.04);
+    }
+    .shopify-host-nav-item--b2b .shopify-host-b2b-pill {
+      margin-left: auto;
+      font-size: 10px;
+      font-weight: 700;
+      background: #E3E3E3;
+      color: #4A4A4A;
+      padding: 1px 5px;
+      border-radius: 4px;
+    }
+    .shopify-host-nav-item--active {
+      background: #FFFFFF !important;
+      font-weight: 650;
+      color: #1A1A1A;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+    }
+    .shopify-host-nav-item--active .shopify-host-active-indicator {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #008060;
+      margin-left: auto;
+    }
+    .shopify-host-nav-divider {
+      height: 1px;
+      background: #DCDCDC;
+      margin: 8px 6px;
+    }
+    .shopify-host-sidebar-footer {
+      border-top: 1px solid #DCDCDC;
+      padding-top: 8px;
+    }
+
+    /* 3. MAIN EMBEDDED CONTENT WRAPPER */
+    .shopify-host-main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+      background: #F1F1F1;
+    }
+    /* Contextual Save Bar */
+    .shopify-host-save-bar {
+      height: 48px;
+      background: #1A1A1A;
+      color: #FFFFFF;
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #303030;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.12);
+    }
+    .shopify-host-save-bar-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12.5px;
+      font-weight: 500;
+      color: #E3E3E3;
+    }
+    .shopify-host-status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #008060;
+      display: inline-block;
+    }
+    .shopify-host-save-bar-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .shopify-host-save-toast {
+      font-size: 12px;
+      font-weight: 500;
+      color: #0C5132;
+      background: #CDFEE1;
+      padding: 4px 10px;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      display: inline-block;
+    }
+    .shopify-host-discard-btn {
+      background: transparent;
+      color: #E3E3E3;
+      border: 1px solid #4A4A4A;
+      border-radius: 6px;
+      padding: 5px 12px;
+      font-size: 12.5px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    .shopify-host-discard-btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+    }
+    .shopify-host-save-btn {
+      background: #008060;
+      color: #FFFFFF;
+      border: 1px solid #008060;
+      border-radius: 6px;
+      padding: 5px 14px;
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 1px 0 rgba(0, 0, 0, 0.1);
+    }
+    .shopify-host-save-btn:hover {
+      background: #006E52;
+    }
+
+    .shopify-host-app-viewport {
+      width: 100%;
+    }
+
+    /* EMBEDDED IFRAME CHROME GUARD */
+    /* When embedded inside Shopify Admin iframe (window.top !== window.self) or ?embedded=1 or ?host= */
+    .is-embedded .admin-host-topbar,
+    .is-embedded .admin-host-sidebar,
+    .is-embedded .admin-host-save-bar,
+    .is-embedded .shopify-host-topbar,
+    .is-embedded .shopify-host-sidebar,
+    .is-embedded .shopify-host-save-bar {
+      display: none !important;
+    }
+
+    .is-embedded .shopify-host-body {
+      display: block !important;
+      width: 100% !important;
+    }
+
+    .is-embedded .shopify-host-main-content,
+    .is-embedded .shopify-host-app-viewport {
+      width: 100% !important;
+      max-width: 100% !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      background: transparent !important;
+    }
+
+    .is-embedded .shopify-admin-host-frame {
+      min-height: auto !important;
+      background: transparent !important;
     }
 
     .tl-page-canvas {
@@ -1298,11 +1638,22 @@ export function renderEmbeddedRuleBuilderHtml(
         if (saveBanner) {
           saveBanner.innerHTML =
             '<svg width="16" height="16" viewBox="0 0 24 24" fill="#059669"><circle cx="12" cy="12" r="10"/><path d="M9 12l2 2 4-4" stroke="#FFF" stroke-width="2" fill="none"/></svg>' +
-            '<span>Rules saved (' + payload.poRegexPattern + ')</span>';
+            '<span>All changes saved</span>';
+        }
+        const hostSaveToast = document.getElementById('host-save-toast');
+        if (hostSaveToast) {
+          hostSaveToast.textContent = 'All changes saved';
+          hostSaveToast.style.display = 'inline-block';
         }
       }
 
       if (saveBtn) saveBtn.addEventListener('click', handleSave);
+
+      const hostSaveBtn = document.getElementById('host-save-btn');
+      if (hostSaveBtn) hostSaveBtn.addEventListener('click', handleSave);
+
+      const abSaveBtn = document.getElementById('ab-save-btn');
+      if (abSaveBtn) abSaveBtn.addEventListener('click', handleSave);
 
       // Simulate Handler
       async function handleSimulate() {

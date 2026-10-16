@@ -263,4 +263,87 @@ describe("Phase P4 (QA Gate 5): End-to-End HTTP Server + Wasm Neutral Bundle Int
       'target = "purchase.payment-customization.run"'
     );
   });
+
+  it("39. GET /?embedded=1 renders embedded iframe mode without outer Admin Top Bar and Left Sidebar", async () => {
+    const standaloneRes = await fetch(`${baseUrl}/`);
+    const standaloneHtml = await standaloneRes.text();
+    expect(standaloneHtml).toContain("admin-host-topbar");
+    expect(standaloneHtml).toContain("admin-host-sidebar");
+    expect(standaloneHtml).toContain("ui-title-bar");
+
+    const embeddedRes = await fetch(`${baseUrl}/?embedded=1`);
+    expect(embeddedRes.status).toBe(200);
+    const embeddedHtml = await embeddedRes.text();
+    expect(embeddedHtml).toContain("is-embedded");
+    expect(embeddedHtml).not.toContain('<header class="shopify-host-topbar admin-host-topbar"');
+    expect(embeddedHtml).not.toContain('<aside class="shopify-host-sidebar admin-host-sidebar"');
+    expect(embeddedHtml).toContain("ui-title-bar");
+    expect(embeddedHtml).toContain('id="rule-builder-form"');
+  });
+
+  it("40. POST /api/webhooks/uninstalled returns 200 OK on valid raw buffer HMAC and 401 on invalid HMAC", async () => {
+    const rawPayload = JSON.stringify({
+      myshopify_domain: "termslock-b2b-dev.myshopify.com",
+      id: 99887766
+    });
+    const validHmac = crypto
+      .createHmac("sha256", DEFAULT_WEBHOOK_SECRET)
+      .update(rawPayload, "utf8")
+      .digest("base64");
+
+    const okRes = await fetch(`${baseUrl}/api/webhooks/uninstalled`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Shopify-Topic": "app/uninstalled",
+        "X-Shopify-Hmac-Sha256": validHmac
+      },
+      body: rawPayload
+    });
+    expect(okRes.status).toBe(200);
+    const okJson = (await okRes.json()) as { success: boolean; topic: string };
+    expect(okJson.success).toBe(true);
+    expect(okJson.topic).toBe("app/uninstalled");
+
+    const unauthorizedRes = await fetch(`${baseUrl}/api/webhooks/uninstalled`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Shopify-Topic": "app/uninstalled",
+        "X-Shopify-Hmac-Sha256": "invalid_forged_hmac"
+      },
+      body: rawPayload
+    });
+    expect(unauthorizedRes.status).toBe(401);
+  });
+
+  it("41. verifies raw UTF-8 request buffer HMAC against custom whitespace, and shopify.app.toml compliance configuration", async () => {
+    // Non-canonical JSON with extra indentation and spaced keys
+    const nonCanonicalBody = `{\n  "shop_id": 123456,\n  "shop_domain": "termslock-raw-test.myshopify.com",\n  "customer": {\n    "id": 98765\n  }\n}`;
+    const validHmac = crypto
+      .createHmac("sha256", DEFAULT_WEBHOOK_SECRET)
+      .update(nonCanonicalBody, "utf8")
+      .digest("base64");
+
+    const res = await fetch(`${baseUrl}/api/webhooks/gdpr`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Shopify-Topic": "customers/data_request",
+        "X-Shopify-Hmac-Sha256": validHmac
+      },
+      body: nonCanonicalBody
+    });
+    expect(res.status).toBe(200);
+
+    const appToml = fs.readFileSync(
+      path.resolve(process.cwd(), "shopify.app.toml"),
+      "utf8"
+    );
+    expect(appToml).toContain("compliance_topics");
+    expect(appToml).toContain("app/uninstalled");
+    expect(appToml).toContain("[pos]");
+    expect(appToml).toContain("embedded = false");
+    expect(appToml).toContain("/api/auth/callback");
+  });
 });

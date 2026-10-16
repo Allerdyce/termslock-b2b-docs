@@ -5,6 +5,7 @@ export interface AdminHostShellProps {
   storeName?: string;
   activeAppName?: string;
   planName?: string;
+  isEmbedded?: boolean;
 }
 
 const e = React.createElement;
@@ -13,15 +14,32 @@ export function AdminHostShell({
   children,
   storeName = "Apex Industrial B2B",
   activeAppName = "TermsLock B2B Rules",
-  planName = "Shopify Plus & Enterprise Wholesale Plan"
+  planName = "Shopify Plus & Enterprise Wholesale Plan",
+  isEmbedded = false
 }: AdminHostShellProps): React.ReactElement {
+  if (isEmbedded) {
+    return e(
+      "div",
+      { className: "shopify-admin-host-frame is-embedded" },
+      e(
+        "div",
+        { className: "shopify-host-body is-embedded" },
+        e(
+          "div",
+          { className: "shopify-host-main-content admin-host-main is-embedded shopify-host-app-viewport" },
+          children
+        )
+      )
+    );
+  }
+
   return e(
     "div",
     { className: "shopify-admin-host-frame" },
     // 1. TOP DARK ADMIN BAR (48px, #1A1A1A)
     e(
       "header",
-      { className: "shopify-host-topbar" },
+      { className: "shopify-host-topbar admin-host-topbar" },
       e(
         "div",
         { className: "shopify-host-topbar-left" },
@@ -113,7 +131,7 @@ export function AdminHostShell({
       // LEFT ADMIN SIDEBAR (240px, #EBEBEB)
       e(
         "aside",
-        { className: "shopify-host-sidebar" },
+        { className: "shopify-host-sidebar admin-host-sidebar" },
         e(
           "nav",
           { className: "shopify-host-nav" },
@@ -256,11 +274,11 @@ export function AdminHostShell({
       // MAIN EMBEDDED CONTENT WRAPPER
       e(
         "div",
-        { className: "shopify-host-main-content" },
+        { className: "shopify-host-main-content admin-host-main" },
         // 3. CONTEXTUAL SAVE BAR (#1A1A1A)
         e(
           "div",
-          { className: "shopify-host-save-bar" },
+          { className: "shopify-host-save-bar admin-host-save-bar" },
           e(
             "div",
             { className: "shopify-host-save-bar-status" },
@@ -270,9 +288,9 @@ export function AdminHostShell({
           e(
             "div",
             { className: "shopify-host-save-bar-actions" },
-            e("span", { id: "rules-save-banner", className: "shopify-host-save-toast" }, "All changes saved"),
+            e("span", { id: "host-save-toast", className: "shopify-host-save-toast" }, "All changes saved"),
             e("button", { type: "button", id: "host-discard-btn", className: "shopify-host-discard-btn" }, "Discard"),
-            e("button", { type: "button", id: "save-rules-btn", className: "shopify-host-save-btn" }, "Save")
+            e("button", { type: "button", id: "host-save-btn", className: "shopify-host-save-btn" }, "Save")
           )
         ),
         // EMBEDDED POLARIS PAGE

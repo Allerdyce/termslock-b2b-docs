@@ -28,19 +28,23 @@ export interface GdprWebhookResponse {
 
 /**
  * Verifies Shopify X-Shopify-Hmac-Sha256 webhook signature using timing-safe comparison.
+ * Directly updates from raw Buffer bytes to prevent JSON re-serialization discrepancy.
  */
 export function verifyShopifyWebhookHmac(
-  rawBody: string,
+  rawBody: Buffer | string,
   hmacHeader: string,
   clientSecret: string
 ): boolean {
   if (!hmacHeader || !clientSecret) {
     return false;
   }
-  const digest = crypto
-    .createHmac("sha256", clientSecret)
-    .update(rawBody, "utf8")
-    .digest("base64");
+  const hmac = crypto.createHmac("sha256", clientSecret);
+  if (Buffer.isBuffer(rawBody)) {
+    hmac.update(rawBody);
+  } else {
+    hmac.update(rawBody, "utf8");
+  }
+  const digest = hmac.digest("base64");
 
   const a = Buffer.from(digest, "utf8");
   const b = Buffer.from(hmacHeader, "utf8");
@@ -57,7 +61,7 @@ export function verifyShopifyWebhookHmac(
  */
 export function handleGdprWebhook(params: {
   topic: GdprTopic;
-  rawBody: string;
+  rawBody: Buffer | string;
   hmacHeader: string;
   clientSecret: string;
 }): GdprWebhookResponse {
@@ -67,7 +71,10 @@ export function handleGdprWebhook(params: {
     params.clientSecret
   );
 
-  const parsed = JSON.parse(params.rawBody || "{}") as Partial<GdprWebhookPayload>;
+  const rawString = Buffer.isBuffer(params.rawBody)
+    ? params.rawBody.toString("utf8")
+    : params.rawBody;
+  const parsed = JSON.parse(rawString || "{}") as Partial<GdprWebhookPayload>;
   const shopDomain = parsed.shop_domain ?? "unknown.myshopify.com";
 
   if (!verified) {

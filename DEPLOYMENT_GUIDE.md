@@ -60,11 +60,15 @@ Update your production URLs to point to your live hosted service:
 npx @shopify/cli@latest app config use
 ```
 
-Verify in `shopify.app.toml`:
+Verify in `shopify.app.toml` (Include `[auth] redirect_urls = [ 'https://.../api/auth/callback' ]`, `[pos] embedded = false`, `compliance_topics = [ 'customers/data_request', 'customers/redact', 'shop/redact' ]`, and `app/uninstalled` webhook subscription in `shopify.app.toml`, verifying HMAC-SHA256 strictly against the raw HTTP request buffer):
 ```toml
 client_id = "YOUR_SHOPIFY_API_KEY"
 application_url = "https://termslock-app.fly.dev"
 embedded = true
+api_version = "2026-10"
+
+[pos]
+embedded = false
 
 [auth]
 redirect_urls = [
@@ -75,16 +79,12 @@ redirect_urls = [
 api_version = "2026-10"
 
   [[webhooks.subscriptions]]
-  topics = ["customers/data_request"]
+  compliance_topics = ["customers/data_request", "customers/redact", "shop/redact"]
   uri = "https://termslock-app.fly.dev/api/webhooks/gdpr"
 
   [[webhooks.subscriptions]]
-  topics = ["customers/redact"]
-  uri = "https://termslock-app.fly.dev/api/webhooks/gdpr"
-
-  [[webhooks.subscriptions]]
-  topics = ["shop/redact"]
-  uri = "https://termslock-app.fly.dev/api/webhooks/gdpr"
+  topics = ["app/uninstalled"]
+  uri = "https://termslock-app.fly.dev/api/webhooks/uninstalled"
 ```
 
 ---

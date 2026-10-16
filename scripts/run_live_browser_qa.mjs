@@ -172,31 +172,59 @@ async function main() {
     console.log(`[QA Gate 4] Connected to live page: "${pageTitle}"`);
 
     // =========================================================================
-    // INTERACTIVE TEST 1: Rule Editing & <10 KB Metafield Compilation
+    // INTERACTIVE TEST 1: PO Presets Click-Through & Rule Saving
     // =========================================================================
     console.log(
-      "[QA Gate 4] Executing Interactive Test 1: Set PO Regex to ^PO-[0-9]{6}$ and click Save & Compile Rules..."
+      "[QA Gate 3] Executing Step 1: Testing all 4 PO Format Presets..."
     );
-    const test1Result = await cdp.evaluate(`
+    const presetsResult = await cdp.evaluate(`
       (async () => {
-        const input = document.getElementById('po-regex-input');
-        input.value = '^PO-[0-9]{6}$';
+        const results = [];
+        const presets = [
+          { id: 'preset-po-corporate', expectedRegex: '^PO-[0-9]{6}$' },
+          { id: 'preset-po-numeric', expectedRegex: '^[0-9]{5,10}$' },
+          { id: 'preset-po-nonempty', expectedRegex: '^.+$' },
+          { id: 'preset-po-custom', expectedRegex: '^PO-[0-9]{5,10}$' }
+        ];
+
+        for (const p of presets) {
+          document.getElementById(p.id).click();
+          await new Promise(r => setTimeout(r, 100));
+          const val = document.getElementById('po-regex-input').value;
+          const bullet = document.getElementById('summary-bullet-po').textContent;
+          results.push({ id: p.id, val, bullet, match: val === p.expectedRegex && bullet.includes(val) });
+        }
+
+        // Reset to corporate preset
+        document.getElementById('preset-po-corporate').click();
+        await new Promise(r => setTimeout(r, 100));
+
+        // Edit Minimum subtotal to 1500 and Wholesale MOQ to 750
+        document.getElementById('po-threshold-input').value = '1500';
+        document.getElementById('po-threshold-input').dispatchEvent(new Event('input'));
+        document.getElementById('moq-subtotal-input').value = '750';
+        document.getElementById('moq-subtotal-input').dispatchEvent(new Event('input'));
+
+        // Click Save rules
         document.getElementById('save-rules-btn').click();
-        await new Promise(r => setTimeout(r, 350));
+        await new Promise(r => setTimeout(r, 400));
+
         return {
-          banner: document.getElementById('rules-save-banner').textContent,
-          counter: document.getElementById('metafield-byte-counter').textContent,
-          json: document.getElementById('metafield-json-preview').textContent
+          presets: results,
+          saveBanner: document.getElementById('rules-save-banner').textContent,
+          bulletPo: document.getElementById('summary-bullet-po').textContent,
+          bulletMoq: document.getElementById('summary-bullet-moq').textContent
         };
       })()
     `);
 
-    if (!test1Result.json.includes('"^PO-[0-9]{6}$"')) {
-      throw new Error(
-        `Interactive Test 1 failed: Metafield JSON did not update: ${JSON.stringify(test1Result)}`
-      );
+    for (const pr of presetsResult.presets) {
+      if (!pr.match) {
+        throw new Error(`Preset click test failed for ${pr.id}: ${JSON.stringify(pr)}`);
+      }
     }
-    console.log(`[QA Gate 4] Test 1 Metafield Counter: ${test1Result.counter}`);
+    console.log(`[QA Gate 3] Presets verified in lockstep: ${presetsResult.presets.length} / 4 passed`);
+    console.log(`[QA Gate 3] Save status: "${presetsResult.saveBanner}", MOQ bullet: "${presetsResult.bulletMoq}"`);
 
     const qa01Path = path.join(QA_DIR, "qa-01-live-rule-builder.png");
     const store01Path = path.join(
@@ -206,17 +234,14 @@ async function main() {
     await cdp.captureScreenshotToFiles([qa01Path, store01Path]);
 
     // =========================================================================
-    // INTERACTIVE TEST 2: Live Dry-Run Failure Case (INVALID-123 + P.O. Box 409 + untagged)
+    // INTERACTIVE TEST 2: Toggle Blocked PO & Address Scenario
     // =========================================================================
     console.log(
-      "[QA Gate 4] Executing Interactive Test 2: PO 'INVALID-123', Address 'P.O. Box 409', Untagged customer..."
+      "[QA Gate 3] Executing Step 2: Click '✕ Blocked PO & Address' scenario toggle..."
     );
     const test2Result = await cdp.evaluate(`
       (async () => {
-        document.getElementById('sim-po-input').value = 'INVALID-123';
-        document.getElementById('sim-address1-input').value = 'P.O. Box 409';
-        document.getElementById('sim-tags-input').value = '';
-        document.getElementById('run-simulator-btn').click();
+        document.getElementById('preset-scenario-fail').click();
         await new Promise(r => setTimeout(r, 350));
         return {
           statusPill: document.getElementById('sim-status-pill').textContent.trim(),
@@ -229,13 +254,13 @@ async function main() {
     if (
       !test2Result.errorsHtml.includes("$.cart.poNumber") ||
       !test2Result.errorsHtml.includes("$.cart.billingAddress.address1") ||
-      !test2Result.paymentsHtml.includes("HIDDEN BY GATE")
+      !test2Result.paymentsHtml.includes("Hidden by rule")
     ) {
       throw new Error(
         `Interactive Test 2 failed assertions: ${JSON.stringify(test2Result)}`
       );
     }
-    console.log(`[QA Gate 4] Test 2 Status: ${test2Result.statusPill}`);
+    console.log(`[QA Gate 3] Test 2 Blocked State Verified: ${test2Result.statusPill}`);
 
     const qa02Path = path.join(QA_DIR, "qa-02-live-simulator-blocked.png");
     const store03Path = path.join(
@@ -245,17 +270,14 @@ async function main() {
     await cdp.captureScreenshotToFiles([qa02Path, store03Path]);
 
     // =========================================================================
-    // INTERACTIVE TEST 3: Live Dry-Run Pass Case (PO-849201 + 400 Market St + Net-30)
+    // INTERACTIVE TEST 3: Toggle Approved Net-30 Scenario
     // =========================================================================
     console.log(
-      "[QA Gate 4] Executing Interactive Test 3: PO 'PO-849201', Address '400 Market St', Tag 'Net-30'..."
+      "[QA Gate 3] Executing Step 3: Click '✓ Approved Net-30' scenario toggle..."
     );
     const test3Result = await cdp.evaluate(`
       (async () => {
-        document.getElementById('sim-po-input').value = 'PO-849201';
-        document.getElementById('sim-address1-input').value = '400 Market St';
-        document.getElementById('sim-tags-input').value = 'Net-30';
-        document.getElementById('run-simulator-btn').click();
+        document.getElementById('preset-scenario-pass').click();
         await new Promise(r => setTimeout(r, 350));
         return {
           statusPill: document.getElementById('sim-status-pill').textContent.trim(),
@@ -266,14 +288,14 @@ async function main() {
     `);
 
     if (
-      !test3Result.statusPill.includes("CHECKOUT APPROVED (0 ERRORS)") ||
-      !test3Result.paymentsHtml.includes("RANK #1 • PROMOTED")
+      !test3Result.statusPill.includes("0 ERRORS") ||
+      !test3Result.paymentsHtml.includes("Recommended")
     ) {
       throw new Error(
         `Interactive Test 3 failed assertions: ${JSON.stringify(test3Result)}`
       );
     }
-    console.log(`[QA Gate 4] Test 3 Status: ${test3Result.statusPill}`);
+    console.log(`[QA Gate 3] Test 3 Approved State Verified: ${test3Result.statusPill}`);
 
     const qa03Path = path.join(QA_DIR, "qa-03-live-simulator-approved.png");
     const store02Path = path.join(
@@ -282,12 +304,84 @@ async function main() {
     );
     await cdp.captureScreenshotToFiles([qa03Path, store02Path]);
 
+    // =========================================================================
+    // INTERACTIVE TEST 4: Drawer Expansion & Custom PO-999999 Simulation
+    // =========================================================================
+    console.log(
+      "[QA Gate 3] Executing Step 4: Expand test buyer drawer and test PO-999999..."
+    );
+    const test4Result = await cdp.evaluate(`
+      (async () => {
+        const launchBtn = document.getElementById('launch-simulator-btn');
+        if (launchBtn) launchBtn.click();
+        await new Promise(r => setTimeout(r, 200));
+
+        const drawer = document.getElementById('test-buyer-drawer');
+        const isDrawerOpen = drawer ? drawer.open : false;
+
+        // Enter PO-999999
+        document.getElementById('sim-po-input').value = 'PO-999999';
+        document.getElementById('run-simulator-btn').click();
+        await new Promise(r => setTimeout(r, 350));
+
+        return {
+          isDrawerOpen,
+          statusPill: document.getElementById('sim-status-pill').textContent.trim(),
+          errorsHtml: document.getElementById('sim-errors-container').textContent
+        };
+      })()
+    `);
+
+    if (!test4Result.isDrawerOpen || !test4Result.errorsHtml.includes("PO-999999")) {
+      throw new Error(`Test 4 custom PO simulation failed: ${JSON.stringify(test4Result)}`);
+    }
+    console.log(`[QA Gate 3] Test 4 Drawer & PO-999999 Verified: ${test4Result.statusPill}`);
+
+    // =========================================================================
+    // INTERACTIVE TEST 5: Embedded Mode (?embedded=1)
+    // =========================================================================
+    console.log(
+      "[QA Gate 3] Executing Step 5: Navigate to ?embedded=1 and verify host shell suppression..."
+    );
+    await cdp.send("Page.navigate", { url: "http://localhost:3456/?embedded=1" });
+    await sleep(800);
+
+    const test5Result = await cdp.evaluate(`
+      (() => {
+        const topbar = document.querySelector('.admin-host-topbar');
+        const sidebar = document.querySelector('.admin-host-sidebar');
+        const isEmbeddedClass = document.documentElement.classList.contains('is-embedded');
+        const titleBar = document.querySelector('ui-title-bar');
+
+        const topbarVisible = topbar ? window.getComputedStyle(topbar).display !== 'none' : false;
+        const sidebarVisible = sidebar ? window.getComputedStyle(sidebar).display !== 'none' : false;
+
+        return {
+          isEmbeddedClass,
+          hasTitleBar: !!titleBar,
+          topbarVisible,
+          sidebarVisible
+        };
+      })()
+    `);
+
+    if (!test5Result.isEmbeddedClass || test5Result.topbarVisible || test5Result.sidebarVisible) {
+      throw new Error(`Test 5 embedded mode guard failed: ${JSON.stringify(test5Result)}`);
+    }
+    console.log(
+      `[QA Gate 3] Test 5 Embedded Mode Verified: Mock TopBar/Sidebar cleanly hidden! (hasTitleBar=${test5Result.hasTitleBar})`
+    );
+
+    const qa04Path = path.join(QA_DIR, "qa-04-embedded-iframe-mode.png");
+    await cdp.captureScreenshotToFiles([qa04Path]);
+
     cdp.close();
 
     flattenAndVerifyPngs([
       qa01Path,
       qa02Path,
       qa03Path,
+      qa04Path,
       store01Path,
       store02Path,
       store03Path
