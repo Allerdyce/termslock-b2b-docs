@@ -404,12 +404,12 @@ export function renderDemoPageHtml(videoPath?: string): string {
         <p>Watch a complete 3-step walkthrough of B2B purchase order validation and Net-30 payment method customization.</p>
 
         <div class="video-wrapper">
-          <video controls playsinline preload="metadata">
-            <source src="${videoPath ?? "/demo-video.webm"}" type="video/webm" />
-            <source src="/demo-video.mp4" type="video/mp4" />
+          <video controls autoplay muted loop playsinline preload="auto">
+            <source src="${videoPath ?? "/demo-video.mp4"}" type="video/mp4" />
+            <source src="/demo-video.webm" type="video/webm" />
             <div class="video-fallback">
               <p>Your browser does not support inline video playback.</p>
-              <p><a href="${videoPath ?? "/demo-video.webm"}" download style="color:#A7F3D0;">Download Walkthrough Screencast (WebM)</a></p>
+              <p><a href="${videoPath ?? "/demo-video.mp4"}" download style="color:#A7F3D0;">Download Walkthrough Screencast (MP4)</a></p>
             </div>
           </video>
         </div>

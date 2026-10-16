@@ -175,13 +175,48 @@ export async function handleRequest(request: Request, env: Env): Promise<Respons
 
     // 1c. GET /demo -> Public Interactive Product Demo & Video Walkthrough
     if ((method === "GET" || method === "HEAD") && pathname === "/demo") {
-      const html = renderDemoPageHtml("/demo-video.webm");
+      const html = renderDemoPageHtml("/demo-video.mp4");
       return new Response(method === "HEAD" ? null : html, {
         status: 200,
         headers: {
           "Content-Type": "text/html; charset=utf-8",
           "Cache-Control": "public, max-age=3600"
         }
+      });
+    }
+
+    // 1d. GET /demo-video.mp4 or /demo-video.webm -> Stream from GitHub Raw CDN
+    if (
+      (method === "GET" || method === "HEAD") &&
+      (pathname === "/demo-video.mp4" || pathname === "/demo-video.webm")
+    ) {
+      const isMp4 = pathname.endsWith(".mp4");
+      const cdnUrl = isMp4
+        ? "https://raw.githubusercontent.com/Allerdyce/termslock-b2b-docs/main/docs/shopify-store/termslock-screencast.mp4"
+        : "https://raw.githubusercontent.com/Allerdyce/termslock-b2b-docs/main/docs/shopify-store/termslock-screencast.webm";
+
+      const cdnResponse = await fetch(cdnUrl, {
+        headers: request.headers.get("Range") ? { Range: request.headers.get("Range")! } : undefined
+      });
+
+      if (!cdnResponse.ok && cdnResponse.status !== 304 && cdnResponse.status !== 206) {
+        return new Response("Video stream unavailable", { status: 502 });
+      }
+
+      const headers = new Headers();
+      headers.set("Content-Type", isMp4 ? "video/mp4" : "video/webm");
+      headers.set("Cache-Control", "public, max-age=86400, stale-while-revalidate=604800");
+      headers.set("Access-Control-Allow-Origin", "*");
+      headers.set("Accept-Ranges", "bytes");
+
+      const cl = cdnResponse.headers.get("Content-Length");
+      if (cl) headers.set("Content-Length", cl);
+      const cr = cdnResponse.headers.get("Content-Range");
+      if (cr) headers.set("Content-Range", cr);
+
+      return new Response(method === "HEAD" ? null : cdnResponse.body, {
+        status: cdnResponse.status,
+        headers
       });
     }
 
